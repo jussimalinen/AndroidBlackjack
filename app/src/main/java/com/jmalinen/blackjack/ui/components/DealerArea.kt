@@ -40,7 +40,7 @@ fun DealerArea(
         Text(
             text = "DEALER",
             color = Color.White.copy(alpha = 0.6f),
-            fontSize = 13.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold
         )
 
@@ -54,7 +54,7 @@ fun DealerArea(
                     }
                 } else "",
                 color = Color.White.copy(alpha = scoreAlpha),
-                fontSize = 13.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
         }

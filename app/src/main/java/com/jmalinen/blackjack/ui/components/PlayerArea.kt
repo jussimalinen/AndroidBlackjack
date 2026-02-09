@@ -38,14 +38,14 @@ fun PlayerArea(
             Text(
                 text = "Hand ${activeHandIndex + 1} of ${hands.size}",
                 color = Color.White.copy(alpha = 0.6f),
-                fontSize = 12.sp
+                fontSize = 14.sp
             )
         }
 
         Text(
             text = "YOUR HAND${if (hands.size > 1) "S" else ""}",
             color = Color.White.copy(alpha = 0.6f),
-            fontSize = 13.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold
         )
 

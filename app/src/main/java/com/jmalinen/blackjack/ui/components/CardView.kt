@@ -44,7 +44,7 @@ fun CardView(
     if (!card.faceUp) {
         Box(
             modifier = modifier
-                .size(width = 56.dp, height = 80.dp)
+                .size(width = 70.dp, height = 100.dp)
                 .clip(shape)
                 .background(CardBack)
                 .border(1.dp, Color.White.copy(alpha = 0.3f), shape),
@@ -52,7 +52,7 @@ fun CardView(
         ) {
             Text(
                 text = "\u2660",
-                fontSize = 24.sp,
+                fontSize = 30.sp,
                 color = Color.White.copy(alpha = 0.3f)
             )
         }
@@ -61,32 +61,32 @@ fun CardView(
 
         Box(
             modifier = modifier
-                .size(width = 56.dp, height = 80.dp)
+                .size(width = 70.dp, height = 100.dp)
                 .clip(shape)
                 .background(CardWhite)
                 .border(1.dp, Color.Gray.copy(alpha = 0.5f), shape)
-                .padding(4.dp)
+                .padding(5.dp)
         ) {
             Column(
                 modifier = Modifier.align(Alignment.TopStart)
             ) {
                 Text(
                     text = card.rank.symbol,
-                    fontSize = 14.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = textColor,
-                    lineHeight = 14.sp
+                    lineHeight = 16.sp
                 )
                 Text(
                     text = card.suit.symbol.toString(),
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     color = textColor,
-                    lineHeight = 12.sp
+                    lineHeight = 14.sp
                 )
             }
             Text(
                 text = card.suit.symbol.toString(),
-                fontSize = 28.sp,
+                fontSize = 34.sp,
                 color = textColor,
                 modifier = Modifier.align(Alignment.Center)
             )
@@ -115,7 +115,7 @@ fun EmptyCardSlot(modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(6.dp)
     Box(
         modifier = modifier
-            .size(width = 56.dp, height = 80.dp)
+            .size(width = 70.dp, height = 100.dp)
             .clip(shape)
             .border(1.dp, Color.White.copy(alpha = 0.2f), shape)
     )

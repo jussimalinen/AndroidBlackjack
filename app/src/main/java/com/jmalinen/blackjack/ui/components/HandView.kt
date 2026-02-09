@@ -43,15 +43,15 @@ fun HandView(
             Text(
                 text = scoreText,
                 color = Color.White,
-                fontSize = 13.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
         }
 
         Box(
             modifier = Modifier
-                .height(90.dp)
-                .widthIn(min = 60.dp)
+                .height(110.dp)
+                .widthIn(min = 74.dp)
                 .then(
                     if (isActive) Modifier.border(
                         2.dp,
@@ -70,7 +70,7 @@ fun HandView(
                         AnimatedCardView(
                             card = card,
                             modifier = Modifier
-                                .offset(x = (index * 22).dp)
+                                .offset(x = (index * 28).dp)
                                 .zIndex(index.toFloat())
                         )
                     }
@@ -82,7 +82,7 @@ fun HandView(
             Text(
                 text = "\$${hand.bet}",
                 color = GoldAccent,
-                fontSize = 12.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -97,7 +97,7 @@ fun HandView(
             Text(
                 text = result.displayName,
                 color = resultColor,
-                fontSize = 14.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .background(
