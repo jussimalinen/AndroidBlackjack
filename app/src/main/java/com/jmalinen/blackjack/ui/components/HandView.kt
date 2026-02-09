@@ -89,6 +89,7 @@ fun HandView(
 
         if (result != null) {
             val resultColor = when (result) {
+                HandResult.THREE_SEVENS -> Color(0xFFFFD700)
                 HandResult.BLACKJACK, HandResult.WIN -> Color(0xFF4CAF50)
                 HandResult.LOSE, HandResult.BUST -> Color(0xFFEF5350)
                 HandResult.PUSH -> Color(0xFFFFEB3B)

@@ -415,7 +415,7 @@ class GameViewModel : ViewModel() {
         val newChips = state.chips + result.totalPayout
 
         val winsThisRound = result.handResults.count {
-            it.value == HandResult.WIN || it.value == HandResult.BLACKJACK
+            it.value == HandResult.WIN || it.value == HandResult.BLACKJACK || it.value == HandResult.THREE_SEVENS
         }
 
         val message = buildResultMessage(result, state)
@@ -443,6 +443,7 @@ class GameViewModel : ViewModel() {
         val net = result.totalPayout - totalBet
 
         return when {
+            result.handResults.values.any { it == HandResult.THREE_SEVENS } -> "Three 7s! You win \$$net!"
             result.handResults.values.all { it == HandResult.BLACKJACK } -> "Blackjack!"
             net > 0 -> "You win \$$net!"
             net < 0 -> "You lose \$${-net}"

@@ -54,6 +54,10 @@ class SettingsViewModel : ViewModel() {
         _rules.update { it.copy(insuranceAvailable = value) }
     }
 
+    fun toggleThreeSevensBonus(value: Boolean) {
+        _rules.update { it.copy(threeSevensPays3to1 = value) }
+    }
+
     fun applyPreset(preset: String) {
         _rules.value = when (preset) {
             "Vegas" -> CasinoRules(
@@ -91,6 +95,19 @@ class SettingsViewModel : ViewModel() {
                 maxSplitHands = 4,
                 hitSplitAces = true,
                 insuranceAvailable = true
+            )
+            "Helsinki" -> CasinoRules(
+                numberOfDecks = 6,
+                dealerStandsOnSoft17 = true,
+                dealerPeeks = false,
+                blackjackPayout = BlackjackPayout.THREE_TO_TWO,
+                surrenderPolicy = SurrenderPolicy.EARLY,
+                doubleAfterSplit = true,
+                resplitAces = true,
+                maxSplitHands = 4,
+                hitSplitAces = false,
+                insuranceAvailable = true,
+                threeSevensPays3to1 = true
             )
             else -> CasinoRules()
         }

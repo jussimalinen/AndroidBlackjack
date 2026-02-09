@@ -3,6 +3,7 @@ package com.jmalinen.blackjack.engine
 import com.jmalinen.blackjack.model.CasinoRules
 import com.jmalinen.blackjack.model.Hand
 import com.jmalinen.blackjack.model.HandResult
+import com.jmalinen.blackjack.model.Rank
 
 object PayoutCalculator {
 
@@ -31,6 +32,10 @@ object PayoutCalculator {
             val result: HandResult
             val payout: Int
 
+            val isThreeSevens = rules.threeSevensPays3to1 &&
+                hand.cards.size == 3 &&
+                hand.cards.all { it.rank == Rank.SEVEN }
+
             when {
                 hand.isSurrendered -> {
                     result = HandResult.SURRENDER
@@ -39,6 +44,10 @@ object PayoutCalculator {
                 hand.isBusted -> {
                     result = HandResult.BUST
                     payout = 0
+                }
+                isThreeSevens -> {
+                    result = HandResult.THREE_SEVENS
+                    payout = hand.bet * 4 // 3:1 payout + original bet
                 }
                 hand.isBlackjack && !dealerHand.isBlackjack -> {
                     result = HandResult.BLACKJACK

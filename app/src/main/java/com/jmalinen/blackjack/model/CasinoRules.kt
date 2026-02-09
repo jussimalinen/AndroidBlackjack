@@ -12,6 +12,7 @@ data class CasinoRules(
     val hitSplitAces: Boolean = false,
     val doubleOnAnyTwo: Boolean = true,
     val insuranceAvailable: Boolean = true,
+    val threeSevensPays3to1: Boolean = false,
     val initialChips: Int = 1000,
     val minimumBet: Int = 10,
     val maximumBet: Int = 500

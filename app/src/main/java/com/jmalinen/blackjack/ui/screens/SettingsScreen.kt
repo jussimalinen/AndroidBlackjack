@@ -78,6 +78,13 @@ fun SettingsScreen(
             PresetButton("European", Modifier.weight(1f)) { settingsViewModel.applyPreset("European") }
             PresetButton("Favorable", Modifier.weight(1f)) { settingsViewModel.applyPreset("Favorable") }
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            PresetButton("Helsinki", Modifier.weight(1f)) { settingsViewModel.applyPreset("Helsinki") }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
         HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
@@ -205,6 +212,11 @@ fun SettingsScreen(
             label = "Insurance available",
             checked = rules.insuranceAvailable,
             onCheckedChange = settingsViewModel::toggleInsurance
+        )
+        SwitchRow(
+            label = "Three 7s pays 3:1",
+            checked = rules.threeSevensPays3to1,
+            onCheckedChange = settingsViewModel::toggleThreeSevensBonus
         )
 
         Spacer(modifier = Modifier.height(24.dp))
