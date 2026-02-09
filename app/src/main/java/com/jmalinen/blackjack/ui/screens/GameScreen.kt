@@ -2,6 +2,7 @@ package com.jmalinen.blackjack.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -69,59 +70,59 @@ fun GameScreen(
             modifier = Modifier.weight(1.2f)
         )
 
-        // Bottom action area
-        when (state.phase) {
-            GamePhase.BETTING -> {
-                BetSelector(
-                    currentBet = state.currentBet,
-                    chips = state.chips,
-                    rules = state.rules,
-                    onBetChanged = viewModel::adjustBet,
-                    onDeal = viewModel::deal
-                )
-            }
-
-            GamePhase.INSURANCE_OFFERED -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Insurance?",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    InsuranceBar(
-                        availableActions = state.availableActions,
-                        onInsurance = viewModel::takeInsurance,
-                        onDecline = viewModel::declineInsurance,
-                        onEvenMoney = viewModel::takeEvenMoney,
-                        onDeclineEvenMoney = viewModel::declineEvenMoney
+        // Bottom action area — fixed height so card areas above don't shift
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            when (state.phase) {
+                GamePhase.BETTING -> {
+                    BetSelector(
+                        currentBet = state.currentBet,
+                        chips = state.chips,
+                        rules = state.rules,
+                        onBetChanged = viewModel::adjustBet,
+                        onDeal = viewModel::deal
                     )
                 }
-            }
 
-            GamePhase.PLAYER_TURN -> {
-                ActionBar(
-                    availableActions = state.availableActions,
-                    onHit = viewModel::hit,
-                    onStand = viewModel::stand,
-                    onDouble = viewModel::doubleDown,
-                    onSplit = viewModel::split,
-                    onSurrender = viewModel::surrender
-                )
-            }
+                GamePhase.INSURANCE_OFFERED -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Insurance?",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        InsuranceBar(
+                            availableActions = state.availableActions,
+                            onInsurance = viewModel::takeInsurance,
+                            onDecline = viewModel::declineInsurance,
+                            onEvenMoney = viewModel::takeEvenMoney,
+                            onDeclineEvenMoney = viewModel::declineEvenMoney
+                        )
+                    }
+                }
 
-            GamePhase.DEALING, GamePhase.DEALER_PEEK, GamePhase.DEALER_TURN -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                GamePhase.PLAYER_TURN -> {
+                    ActionBar(
+                        availableActions = state.availableActions,
+                        onHit = viewModel::hit,
+                        onStand = viewModel::stand,
+                        onDouble = viewModel::doubleDown,
+                        onSplit = viewModel::split,
+                        onSurrender = viewModel::surrender
+                    )
+                }
+
+                GamePhase.DEALING, GamePhase.DEALER_PEEK, GamePhase.DEALER_TURN -> {
                     Text(
                         text = when (state.phase) {
                             GamePhase.DEALER_TURN -> "Dealer's turn..."
@@ -131,24 +132,24 @@ fun GameScreen(
                         fontSize = 16.sp
                     )
                 }
-            }
 
-            GamePhase.ROUND_COMPLETE -> {
-                ResultArea(
-                    message = state.roundMessage,
-                    payout = state.roundPayout,
-                    onNewRound = viewModel::newRound,
-                    onSettings = onNavigateToSettings
-                )
-            }
+                GamePhase.ROUND_COMPLETE -> {
+                    ResultArea(
+                        message = state.roundMessage,
+                        payout = state.roundPayout,
+                        onNewRound = viewModel::newRound,
+                        onSettings = onNavigateToSettings
+                    )
+                }
 
-            GamePhase.GAME_OVER -> {
-                GameOverArea(
-                    handsPlayed = state.handsPlayed,
-                    handsWon = state.handsWon,
-                    onReset = viewModel::resetGame,
-                    onSettings = onNavigateToSettings
-                )
+                GamePhase.GAME_OVER -> {
+                    GameOverArea(
+                        handsPlayed = state.handsPlayed,
+                        handsWon = state.handsWon,
+                        onReset = viewModel::resetGame,
+                        onSettings = onNavigateToSettings
+                    )
+                }
             }
         }
     }
