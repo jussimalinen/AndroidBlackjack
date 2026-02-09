@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import com.jmalinen.blackjack.model.GamePhase
 import com.jmalinen.blackjack.model.Hand
 import com.jmalinen.blackjack.model.HandResult
+import com.jmalinen.blackjack.ui.theme.GoldAccent
 
 @Composable
 fun PlayerArea(
@@ -25,6 +26,7 @@ fun PlayerArea(
     activeHandIndex: Int,
     handResults: Map<Int, HandResult>,
     phase: GamePhase,
+    currentBet: Int,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -63,6 +65,16 @@ fun PlayerArea(
                     result = handResults[index]
                 )
             }
+        }
+
+        val totalBet = if (hands.isNotEmpty()) hands.sumOf { it.bet } else currentBet
+        if (totalBet > 0) {
+            Text(
+                text = "Bet: \$$totalBet",
+                color = GoldAccent,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

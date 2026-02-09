@@ -48,10 +48,18 @@ fun HandView(
             )
         }
 
+        val cardWidth = 70
+        val cardOverlap = 28
+        val handWidth = if (hand.cards.size > 1) {
+            cardWidth + (hand.cards.size - 1) * cardOverlap
+        } else {
+            cardWidth
+        }
+
         Box(
             modifier = Modifier
                 .height(110.dp)
-                .widthIn(min = 74.dp)
+                .widthIn(min = handWidth.dp)
                 .then(
                     if (isActive) Modifier.border(
                         2.dp,

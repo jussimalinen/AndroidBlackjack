@@ -67,6 +67,7 @@ fun GameScreen(
             activeHandIndex = state.activeHandIndex,
             handResults = state.handResults,
             phase = state.phase,
+            currentBet = state.currentBet,
             modifier = Modifier.weight(1.2f)
         )
 
