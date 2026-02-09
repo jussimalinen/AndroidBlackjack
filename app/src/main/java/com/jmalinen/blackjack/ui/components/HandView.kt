@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,12 +66,14 @@ fun HandView(
                 EmptyCardSlot()
             } else {
                 hand.cards.forEachIndexed { index, card ->
-                    CardView(
-                        card = card,
-                        modifier = Modifier
-                            .offset(x = (index * 22).dp)
-                            .zIndex(index.toFloat())
-                    )
+                    key("$index-${card.rank}-${card.suit}") {
+                        AnimatedCardView(
+                            card = card,
+                            modifier = Modifier
+                                .offset(x = (index * 22).dp)
+                                .zIndex(index.toFloat())
+                        )
+                    }
                 }
             }
         }

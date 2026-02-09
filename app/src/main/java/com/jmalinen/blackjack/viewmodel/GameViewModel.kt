@@ -1,6 +1,7 @@
 package com.jmalinen.blackjack.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.jmalinen.blackjack.engine.BlackjackEngine
 import com.jmalinen.blackjack.engine.DealerStrategy
 import com.jmalinen.blackjack.engine.PayoutCalculator
@@ -10,10 +11,13 @@ import com.jmalinen.blackjack.model.GameState
 import com.jmalinen.blackjack.model.Hand
 import com.jmalinen.blackjack.model.HandResult
 import com.jmalinen.blackjack.model.Shoe
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class GameViewModel : ViewModel() {
 
@@ -21,8 +25,16 @@ class GameViewModel : ViewModel() {
     val state: StateFlow<GameState> = _state.asStateFlow()
 
     private var shoe = Shoe(6)
+    private var dealJob: Job? = null
+
+    companion object {
+        private const val DEAL_CARD_DELAY = 300L
+        private const val DEALER_DRAW_DELAY = 500L
+        private const val HOLE_CARD_REVEAL_DELAY = 400L
+    }
 
     fun startGame(rules: CasinoRules) {
+        dealJob?.cancel()
         shoe = Shoe(rules.numberOfDecks)
         _state.value = GameState(
             phase = GamePhase.BETTING,
@@ -48,25 +60,19 @@ class GameViewModel : ViewModel() {
             shoe.shuffle()
         }
 
+        // Draw all 4 cards upfront for consistent shoe state
         val playerCard1 = shoe.draw()
         val dealerCard1 = shoe.draw()
         val playerCard2 = shoe.draw()
         val dealerCard2 = shoe.draw()
 
-        val playerHand = Hand(
-            cards = listOf(playerCard1, playerCard2),
-            bet = state.currentBet
-        )
-        val dealerHand = Hand(
-            cards = listOf(dealerCard1, dealerCard2)
-        )
-
+        // Start with empty hands, transition to DEALING
         _state.update {
             it.copy(
                 phase = GamePhase.DEALING,
-                playerHands = listOf(playerHand),
+                playerHands = listOf(Hand(cards = emptyList(), bet = state.currentBet)),
                 activeHandIndex = 0,
-                dealerHand = dealerHand,
+                dealerHand = Hand(),
                 chips = it.chips - state.currentBet,
                 insuranceBet = 0,
                 handResults = emptyMap(),
@@ -76,7 +82,38 @@ class GameViewModel : ViewModel() {
             )
         }
 
-        afterDeal()
+        // Animate cards one at a time
+        dealJob = viewModelScope.launch {
+            // Player card 1
+            delay(DEAL_CARD_DELAY)
+            _state.update {
+                val hands = it.playerHands.toMutableList()
+                hands[0] = hands[0].addCard(playerCard1)
+                it.copy(playerHands = hands)
+            }
+
+            // Dealer card 1 (face up)
+            delay(DEAL_CARD_DELAY)
+            _state.update {
+                it.copy(dealerHand = it.dealerHand.addCard(dealerCard1))
+            }
+
+            // Player card 2
+            delay(DEAL_CARD_DELAY)
+            _state.update {
+                val hands = it.playerHands.toMutableList()
+                hands[0] = hands[0].addCard(playerCard2)
+                it.copy(playerHands = hands)
+            }
+
+            // Dealer card 2 (face down — hidden by showDealerHoleCard=false)
+            delay(DEAL_CARD_DELAY)
+            _state.update {
+                it.copy(dealerHand = it.dealerHand.addCard(dealerCard2))
+            }
+
+            afterDeal()
+        }
     }
 
     private fun afterDeal() {
@@ -128,9 +165,8 @@ class GameViewModel : ViewModel() {
     }
 
     fun takeEvenMoney() {
-        // Even money: pay 1:1 immediately and end round
         _state.update { state ->
-            val payout = state.currentBet * 2 // original bet + 1:1 win
+            val payout = state.currentBet * 2
             state.copy(
                 phase = GamePhase.ROUND_COMPLETE,
                 chips = state.chips + payout,
@@ -186,7 +222,6 @@ class GameViewModel : ViewModel() {
             )
         }
 
-        // If hand is already finished (e.g., split aces auto-stand), advance
         if (hand.isFinished) {
             advanceToNextHand()
         }
@@ -280,7 +315,6 @@ class GameViewModel : ViewModel() {
             )
         }
 
-        // Check if the first split hand is already finished (e.g., split aces)
         if (hand1.isFinished) {
             advanceToNextHand()
         } else {
@@ -314,7 +348,6 @@ class GameViewModel : ViewModel() {
                 updateAvailableActions()
             }
         } else {
-            // All hands played - check if we need dealer turn
             val allBustedOrSurrendered = _state.value.playerHands.all {
                 it.isBusted || it.isSurrendered
             }
@@ -351,14 +384,22 @@ class GameViewModel : ViewModel() {
             )
         }
 
-        var dealerHand = _state.value.dealerHand
-        while (DealerStrategy.shouldHit(dealerHand, _state.value.rules)) {
-            val card = shoe.draw()
-            dealerHand = dealerHand.addCard(card)
-        }
+        dealJob = viewModelScope.launch {
+            // Pause to let player see the hole card reveal
+            delay(HOLE_CARD_REVEAL_DELAY)
 
-        _state.update { it.copy(dealerHand = dealerHand) }
-        resolveRound()
+            var dealerHand = _state.value.dealerHand
+            while (DealerStrategy.shouldHit(dealerHand, _state.value.rules)) {
+                delay(DEALER_DRAW_DELAY)
+                val card = shoe.draw()
+                dealerHand = dealerHand.addCard(card)
+                _state.update { it.copy(dealerHand = dealerHand) }
+            }
+
+            // Short pause before showing results
+            delay(DEAL_CARD_DELAY)
+            resolveRound()
+        }
     }
 
     private fun resolveRound() {
@@ -413,6 +454,7 @@ class GameViewModel : ViewModel() {
         val state = _state.value
         if (state.phase != GamePhase.ROUND_COMPLETE) return
 
+        dealJob?.cancel()
         _state.update {
             it.copy(
                 phase = GamePhase.BETTING,
@@ -431,6 +473,7 @@ class GameViewModel : ViewModel() {
     }
 
     fun resetGame() {
+        dealJob?.cancel()
         val rules = _state.value.rules
         startGame(rules)
     }
