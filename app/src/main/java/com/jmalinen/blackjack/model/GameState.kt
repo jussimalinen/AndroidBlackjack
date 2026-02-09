@@ -15,7 +15,9 @@ data class GameState(
     val showDealerHoleCard: Boolean = false,
     val roundPayout: Int = 0,
     val handsPlayed: Int = 0,
-    val handsWon: Int = 0
+    val handsWon: Int = 0,
+    val coachEnabled: Boolean = false,
+    val coachFeedback: String = ""
 ) {
     val activeHand: Hand? get() = playerHands.getOrNull(activeHandIndex)
     val totalBetOnTable: Int get() = playerHands.sumOf { it.bet } + insuranceBet

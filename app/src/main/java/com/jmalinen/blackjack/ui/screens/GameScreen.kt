@@ -53,7 +53,9 @@ fun GameScreen(
             currentBet = state.currentBet,
             shoePenetration = 0f, // shoe is internal to viewmodel
             handsPlayed = state.handsPlayed,
-            handsWon = state.handsWon
+            handsWon = state.handsWon,
+            coachEnabled = state.coachEnabled,
+            onToggleCoach = viewModel::toggleCoach
         )
 
         DealerArea(
@@ -70,6 +72,20 @@ fun GameScreen(
             currentBet = state.currentBet,
             modifier = Modifier.weight(1.2f)
         )
+
+        if (state.coachEnabled && state.coachFeedback.isNotEmpty()) {
+            val isCorrect = state.coachFeedback.startsWith("Correct")
+            Text(
+                text = state.coachFeedback,
+                color = if (isCorrect) Color(0xFF4CAF50) else Color(0xFFFF9800),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+        }
 
         // Bottom action area — fixed height so card areas above don't shift
         Box(

@@ -2,6 +2,7 @@ package com.jmalinen.blackjack.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jmalinen.blackjack.engine.BasicStrategyAdvisor
 import com.jmalinen.blackjack.engine.BlackjackEngine
 import com.jmalinen.blackjack.engine.DealerStrategy
 import com.jmalinen.blackjack.engine.PayoutCalculator
@@ -10,6 +11,7 @@ import com.jmalinen.blackjack.model.GamePhase
 import com.jmalinen.blackjack.model.GameState
 import com.jmalinen.blackjack.model.Hand
 import com.jmalinen.blackjack.model.HandResult
+import com.jmalinen.blackjack.model.PlayerAction
 import com.jmalinen.blackjack.model.Shoe
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -49,6 +51,32 @@ class GameViewModel : ViewModel() {
             val clamped = newBet.coerceIn(state.rules.minimumBet, minOf(state.rules.maximumBet, state.chips))
             state.copy(currentBet = clamped)
         }
+    }
+
+    fun toggleCoach() {
+        _state.update { it.copy(coachEnabled = !it.coachEnabled, coachFeedback = "") }
+    }
+
+    private fun evaluateCoach(chosenAction: PlayerAction) {
+        val state = _state.value
+        if (!state.coachEnabled) return
+        val hand = state.activeHand ?: return
+        val dealerUpCard = state.dealerHand.cards.firstOrNull() ?: return
+
+        val optimal = BasicStrategyAdvisor.optimalAction(
+            hand = hand,
+            dealerUpCard = dealerUpCard,
+            availableActions = state.availableActions,
+            rules = state.rules
+        )
+
+        val feedback = if (chosenAction == optimal) {
+            "Correct! ${chosenAction.displayName} was optimal."
+        } else {
+            "Optimal play: ${optimal.displayName} (you chose ${chosenAction.displayName})"
+        }
+
+        _state.update { it.copy(coachFeedback = feedback) }
     }
 
     fun deal() {
@@ -150,6 +178,9 @@ class GameViewModel : ViewModel() {
     }
 
     fun takeInsurance() {
+        if (_state.value.coachEnabled) {
+            _state.update { it.copy(coachFeedback = "Basic strategy: never take insurance") }
+        }
         _state.update { state ->
             val cost = state.currentBet / 2
             state.copy(
@@ -161,10 +192,16 @@ class GameViewModel : ViewModel() {
     }
 
     fun declineInsurance() {
+        if (_state.value.coachEnabled) {
+            _state.update { it.copy(coachFeedback = "Correct! Never take insurance.") }
+        }
         afterInsurance()
     }
 
     fun takeEvenMoney() {
+        if (_state.value.coachEnabled) {
+            _state.update { it.copy(coachFeedback = "Basic strategy: decline even money") }
+        }
         _state.update { state ->
             val payout = state.currentBet * 2
             state.copy(
@@ -181,6 +218,9 @@ class GameViewModel : ViewModel() {
     }
 
     fun declineEvenMoney() {
+        if (_state.value.coachEnabled) {
+            _state.update { it.copy(coachFeedback = "Correct! Decline even money.") }
+        }
         afterInsurance()
     }
 
@@ -230,6 +270,7 @@ class GameViewModel : ViewModel() {
     fun hit() {
         val state = _state.value
         if (state.phase != GamePhase.PLAYER_TURN) return
+        evaluateCoach(PlayerAction.HIT)
 
         val card = shoe.draw()
         val updatedHand = state.activeHand?.addCard(card) ?: return
@@ -248,6 +289,7 @@ class GameViewModel : ViewModel() {
     fun stand() {
         val state = _state.value
         if (state.phase != GamePhase.PLAYER_TURN) return
+        evaluateCoach(PlayerAction.STAND)
 
         val updatedHand = state.activeHand?.copy(isStanding = true) ?: return
         val updatedHands = state.playerHands.toMutableList()
@@ -260,6 +302,7 @@ class GameViewModel : ViewModel() {
     fun doubleDown() {
         val state = _state.value
         if (state.phase != GamePhase.PLAYER_TURN) return
+        evaluateCoach(PlayerAction.DOUBLE_DOWN)
 
         val hand = state.activeHand ?: return
         if (state.chips < hand.bet) return
@@ -285,6 +328,7 @@ class GameViewModel : ViewModel() {
     fun split() {
         val state = _state.value
         if (state.phase != GamePhase.PLAYER_TURN) return
+        evaluateCoach(PlayerAction.SPLIT)
 
         val hand = state.activeHand ?: return
         if (!hand.isPair || state.chips < hand.bet) return
@@ -325,6 +369,7 @@ class GameViewModel : ViewModel() {
     fun surrender() {
         val state = _state.value
         if (state.phase != GamePhase.PLAYER_TURN) return
+        evaluateCoach(PlayerAction.SURRENDER)
 
         val hand = state.activeHand ?: return
         val updatedHand = hand.copy(isSurrendered = true)
@@ -372,7 +417,7 @@ class GameViewModel : ViewModel() {
             rules = state.rules
         )
 
-        _state.update { it.copy(availableActions = actions) }
+        _state.update { it.copy(availableActions = actions, coachFeedback = "") }
     }
 
     private fun playDealerHand() {
@@ -468,7 +513,8 @@ class GameViewModel : ViewModel() {
                 roundPayout = 0,
                 roundMessage = "",
                 availableActions = emptySet(),
-                currentBet = it.currentBet.coerceAtMost(it.chips)
+                currentBet = it.currentBet.coerceAtMost(it.chips),
+                coachFeedback = ""
             )
         }
     }

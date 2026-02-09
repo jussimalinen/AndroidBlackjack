@@ -1,6 +1,8 @@
 package com.jmalinen.blackjack.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,6 +35,8 @@ fun GameInfoBar(
     shoePenetration: Float,
     handsPlayed: Int,
     handsWon: Int,
+    coachEnabled: Boolean,
+    onToggleCoach: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
@@ -66,6 +71,22 @@ fun GameInfoBar(
                 text = "W: $handsWon / $handsPlayed",
                 color = Color.White.copy(alpha = 0.7f),
                 fontSize = 13.sp
+            )
+
+            val coachColor = if (coachEnabled) Color(0xFF4CAF50) else Color.White.copy(alpha = 0.4f)
+            Text(
+                text = "Coach",
+                color = coachColor,
+                fontSize = 12.sp,
+                fontWeight = if (coachEnabled) FontWeight.Bold else FontWeight.Normal,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .then(
+                        if (coachEnabled) Modifier.background(Color(0xFF4CAF50).copy(alpha = 0.2f))
+                        else Modifier.border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                    )
+                    .clickable { onToggleCoach() }
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
             )
 
             Row(verticalAlignment = Alignment.CenterVertically) {

@@ -2,6 +2,7 @@ package com.jmalinen.blackjack.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -78,11 +79,12 @@ fun BetSelector(
                         contentColor = Color.White,
                         disabledContainerColor = chip.color.copy(alpha = 0.3f)
                     ),
-                    modifier = Modifier.size(52.dp)
+                    modifier = Modifier.size(56.dp),
+                    contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
                         text = "${chip.value}",
-                        fontSize = 12.sp,
+                        fontSize = if (chip.value >= 100) 11.sp else 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
