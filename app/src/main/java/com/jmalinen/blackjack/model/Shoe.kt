@@ -32,7 +32,9 @@ class Shoe(private val numberOfDecks: Int) {
     fun drawMatching(predicate: (Card) -> Boolean): Card {
         val index = cards.indexOfFirst(predicate)
         check(index != -1) { "No matching card in shoe" }
-        return cards.removeAt(index)
+        val result = cards.removeAt(index)
+        cards.shuffle()
+        return result
     }
 
     fun needsReshuffle(): Boolean = cards.size <= cutCardPosition
