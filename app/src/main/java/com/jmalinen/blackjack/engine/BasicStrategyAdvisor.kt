@@ -136,6 +136,12 @@ object BasicStrategyAdvisor {
             if (score == 17 && dealerIdx == 9) return Cell.Rs
             if (score == 15 && dealerIdx == 9) return Cell.Rh
         }
+        // ENHC (no hole card) deviations
+        if (!rules.dealerPeeks) {
+            if (score == 11 && dealerIdx == 8) return Cell.H    // Don't double 11 vs 10
+            if (score == 14 && dealerIdx == 8) return Cell.Rh   // Surrender 14 vs 10
+            if (score == 16 && dealerIdx == 9) return Cell.H    // Don't surrender 16 vs A
+        }
         if (score <= 4) return Cell.H
         if (score >= 21) return Cell.S
         return hardTable[score.coerceIn(5, 20)]?.get(dealerIdx) ?: Cell.H
@@ -156,7 +162,11 @@ object BasicStrategyAdvisor {
     )
 
     private fun softStrategy(score: Int, dealerIdx: Int, rules: CasinoRules): Cell {
-        // H17 deviation: soft 19 vs 6 is Ds, soft 18 vs 2 is Ds (already in table)
+        // ENHC (no hole card) deviations
+        if (!rules.dealerPeeks) {
+            if (score == 18 && dealerIdx == 0) return Cell.S    // Soft 18 vs 2: Stand
+            if (score == 19 && dealerIdx == 4) return Cell.S    // Soft 19 vs 6: Stand
+        }
         return softTable[score.coerceIn(13, 20)]?.get(dealerIdx) ?: Cell.H
     }
 
@@ -165,7 +175,7 @@ object BasicStrategyAdvisor {
     private fun pairStrategy(rank: Rank, dealerIdx: Int, rules: CasinoRules): Cell? {
         val das = rules.doubleAfterSplit
         return when (rank) {
-            Rank.ACE -> Cell.P  // Always split aces
+            Rank.ACE -> if (!rules.dealerPeeks && dealerIdx == 9) Cell.H else Cell.P
             Rank.TEN, Rank.JACK, Rank.QUEEN, Rank.KING -> Cell.S  // Never split tens
             Rank.FIVE -> null   // Treat as hard 10
             Rank.NINE -> pairNines(dealerIdx)
@@ -187,6 +197,11 @@ object BasicStrategyAdvisor {
     }
 
     private fun pairEights(d: Int, rules: CasinoRules): Cell {
+        // ENHC (no hole card) deviations
+        if (!rules.dealerPeeks) {
+            if (d == 8) return Cell.Rh  // Surrender 8,8 vs 10
+            if (d == 9) return Cell.H   // Hit 8,8 vs A
+        }
         // H17 deviation: surrender 8s vs A
         if (d == 9 && !rules.dealerStandsOnSoft17) return Cell.Rp
         return Cell.P // Always split 8s
