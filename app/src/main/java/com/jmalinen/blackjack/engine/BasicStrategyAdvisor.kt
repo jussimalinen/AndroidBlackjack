@@ -42,7 +42,7 @@ object BasicStrategyAdvisor {
         }
 
         // Hard totals
-        val cell = hardStrategy(hand.score, dealerIndex, rules)
+        val cell = hardStrategy(hand.score, dealerIndex, hand.cards.size, rules)
         return resolveAction(cell, availableActions) ?: PlayerAction.STAND
     }
 
@@ -126,7 +126,7 @@ object BasicStrategyAdvisor {
         20 to arrayOf(Cell.S,  Cell.S,  Cell.S,  Cell.S,  Cell.S,  Cell.S,  Cell.S,  Cell.S,  Cell.S,  Cell.S),
     )
 
-    private fun hardStrategy(score: Int, dealerIdx: Int, rules: CasinoRules): Cell {
+    private fun hardStrategy(score: Int, dealerIdx: Int, cardCount: Int = 2, rules: CasinoRules): Cell {
         // H17 deviation: double 11 vs A
         if (score == 11 && dealerIdx == 9 && !rules.dealerStandsOnSoft17) {
             return Cell.D
@@ -140,6 +140,7 @@ object BasicStrategyAdvisor {
         if (!rules.dealerPeeks) {
             if (score == 11 && dealerIdx == 8) return Cell.H    // Don't double 11 vs 10
             if (score == 14 && dealerIdx == 8) return Cell.Rh   // Surrender 14 vs 10
+            if (score == 16 && dealerIdx == 8 && cardCount >= 3) return Cell.S  // Multi-card 16 vs 10: Stand
             if (score == 16 && dealerIdx == 9) return Cell.H    // Don't surrender 16 vs A
         }
         if (score <= 4) return Cell.H
