@@ -58,6 +58,7 @@ fun GameScreen(
             onToggleCoach = viewModel::toggleCoach,
             showCount = state.showCount,
             runningCount = state.runningCount,
+            trueCount = state.trueCount,
             onToggleCount = viewModel::toggleCount
         )
 

@@ -38,17 +38,23 @@ class GameViewModel : ViewModel() {
         private const val HOLE_CARD_REVEAL_DELAY = 400L
     }
 
+    private fun updateCountState() {
+        val decksRemaining = (shoe.cardsRemaining / 52f).coerceAtLeast(0.5f)
+        val trueCount = runningCount / decksRemaining
+        _state.update { it.copy(runningCount = runningCount, trueCount = trueCount) }
+    }
+
     private fun drawAndCount(): Card {
         val card = shoe.draw()
         runningCount += card.rank.hiLoValue
-        _state.update { it.copy(runningCount = runningCount) }
+        updateCountState()
         return card
     }
 
     private fun countHoleCard() {
         runningCount += pendingHoleCardValue
         pendingHoleCardValue = 0
-        _state.update { it.copy(runningCount = runningCount) }
+        updateCountState()
     }
 
     fun startGame(rules: CasinoRules) {

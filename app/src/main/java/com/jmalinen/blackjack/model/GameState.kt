@@ -19,6 +19,7 @@ data class GameState(
     val coachEnabled: Boolean = false,
     val coachFeedback: String = "",
     val runningCount: Int = 0,
+    val trueCount: Float = 0f,
     val showCount: Boolean = false
 ) {
     val activeHand: Hand? get() = playerHands.getOrNull(activeHandIndex)

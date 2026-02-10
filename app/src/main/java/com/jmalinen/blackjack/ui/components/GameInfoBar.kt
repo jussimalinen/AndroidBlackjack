@@ -39,6 +39,7 @@ fun GameInfoBar(
     onToggleCoach: () -> Unit,
     showCount: Boolean,
     runningCount: Int,
+    trueCount: Float,
     onToggleCount: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -94,8 +95,10 @@ fun GameInfoBar(
                 )
 
                 val countColor = if (showCount) Color(0xFF42A5F5) else Color.White.copy(alpha = 0.4f)
+                val trueCountStr = if (trueCount >= 0) "+%.1f".format(trueCount) else "%.1f".format(trueCount)
+                val rcStr = if (runningCount >= 0) "+$runningCount" else "$runningCount"
                 Text(
-                    text = if (showCount) "Count: ${if (runningCount >= 0) "+$runningCount" else "$runningCount"}" else "Count",
+                    text = if (showCount) "RC:$rcStr TC:$trueCountStr" else "Count",
                     color = countColor,
                     fontSize = 12.sp,
                     fontWeight = if (showCount) FontWeight.Bold else FontWeight.Normal,
