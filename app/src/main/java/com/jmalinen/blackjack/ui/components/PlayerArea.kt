@@ -1,12 +1,11 @@
 package com.jmalinen.blackjack.ui.components
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,6 +19,7 @@ import com.jmalinen.blackjack.model.Hand
 import com.jmalinen.blackjack.model.HandResult
 import com.jmalinen.blackjack.ui.theme.GoldAccent
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PlayerArea(
     hands: List<Hand>,
@@ -51,10 +51,8 @@ fun PlayerArea(
             fontWeight = FontWeight.Bold
         )
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
             hands.forEachIndexed { index, hand ->
