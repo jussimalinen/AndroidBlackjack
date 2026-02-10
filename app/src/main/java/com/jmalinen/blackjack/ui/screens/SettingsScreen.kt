@@ -219,6 +219,21 @@ fun SettingsScreen(
             onCheckedChange = settingsViewModel::toggleThreeSevensBonus
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Training
+        SectionHeader("Training")
+        SwitchRow(
+            label = "Soft hands only",
+            checked = rules.trainSoftHands,
+            onCheckedChange = settingsViewModel::toggleTrainSoftHands
+        )
+        SwitchRow(
+            label = "Paired hands only",
+            checked = rules.trainPairedHands,
+            onCheckedChange = settingsViewModel::toggleTrainPairedHands
+        )
+
         Spacer(modifier = Modifier.height(24.dp))
 
         // Start button

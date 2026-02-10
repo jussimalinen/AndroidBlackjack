@@ -8,6 +8,7 @@ import com.jmalinen.blackjack.engine.DealerStrategy
 import com.jmalinen.blackjack.engine.PayoutCalculator
 import com.jmalinen.blackjack.model.Card
 import com.jmalinen.blackjack.model.CasinoRules
+import com.jmalinen.blackjack.model.Rank
 import com.jmalinen.blackjack.model.GamePhase
 import com.jmalinen.blackjack.model.GameState
 import com.jmalinen.blackjack.model.Hand
@@ -111,16 +112,35 @@ class GameViewModel : ViewModel() {
         if (state.phase != GamePhase.BETTING) return
         if (state.currentBet > state.chips) return
 
-        if (shoe.needsReshuffle()) {
+        if (state.rules.isTrainingMode || shoe.needsReshuffle()) {
             shoe.shuffle()
             runningCount = 0
             _state.update { it.copy(shoePenetration = 0f, runningCount = 0, trueCount = 0f) }
         }
 
-        // Draw all 4 cards upfront for consistent shoe state
-        val playerCard1 = drawAndCount()
+        // Draw player cards — forced hand type in training mode
+        val playerCard1: Card
+        val playerCard2: Card
+        if (state.rules.isTrainingMode) {
+            val dealSoft = when {
+                state.rules.trainSoftHands && state.rules.trainPairedHands -> Math.random() < 0.5
+                state.rules.trainSoftHands -> true
+                else -> false
+            }
+            if (dealSoft) {
+                playerCard1 = shoe.drawMatching { it.rank.isAce }
+                playerCard2 = shoe.drawMatching { !it.rank.isAce && !it.rank.isTenValue }
+            } else {
+                val rank = Rank.entries.random()
+                playerCard1 = shoe.drawMatching { it.rank == rank }
+                playerCard2 = shoe.drawMatching { it.rank == rank }
+            }
+        } else {
+            playerCard1 = drawAndCount()
+            playerCard2 = drawAndCount()
+        }
+
         val dealerCard1 = drawAndCount()
-        val playerCard2 = drawAndCount()
         val dealerCard2 = shoe.draw() // hole card — counted when revealed
         pendingHoleCardValue = dealerCard2.rank.hiLoValue
 

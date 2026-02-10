@@ -15,8 +15,12 @@ data class CasinoRules(
     val threeSevensPays3to1: Boolean = false,
     val initialChips: Int = 1000,
     val minimumBet: Int = 10,
-    val maximumBet: Int = 500
-)
+    val maximumBet: Int = 500,
+    val trainSoftHands: Boolean = false,
+    val trainPairedHands: Boolean = false
+) {
+    val isTrainingMode: Boolean get() = trainSoftHands || trainPairedHands
+}
 
 enum class BlackjackPayout(val multiplier: Float, val displayName: String) {
     THREE_TO_TWO(1.5f, "3:2"),

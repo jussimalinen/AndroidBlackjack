@@ -58,6 +58,14 @@ class SettingsViewModel : ViewModel() {
         _rules.update { it.copy(threeSevensPays3to1 = value) }
     }
 
+    fun toggleTrainSoftHands(value: Boolean) {
+        _rules.update { it.copy(trainSoftHands = value) }
+    }
+
+    fun toggleTrainPairedHands(value: Boolean) {
+        _rules.update { it.copy(trainPairedHands = value) }
+    }
+
     fun applyPreset(preset: String) {
         _rules.value = when (preset) {
             "Vegas" -> CasinoRules(
