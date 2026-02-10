@@ -6,6 +6,7 @@ import com.jmalinen.blackjack.engine.BasicStrategyAdvisor
 import com.jmalinen.blackjack.engine.BlackjackEngine
 import com.jmalinen.blackjack.engine.DealerStrategy
 import com.jmalinen.blackjack.engine.PayoutCalculator
+import com.jmalinen.blackjack.model.Card
 import com.jmalinen.blackjack.model.CasinoRules
 import com.jmalinen.blackjack.model.GamePhase
 import com.jmalinen.blackjack.model.GameState
@@ -28,6 +29,8 @@ class GameViewModel : ViewModel() {
 
     private var shoe = Shoe(6)
     private var dealJob: Job? = null
+    private var runningCount = 0
+    private var pendingHoleCardValue = 0
 
     companion object {
         private const val DEAL_CARD_DELAY = 300L
@@ -35,9 +38,23 @@ class GameViewModel : ViewModel() {
         private const val HOLE_CARD_REVEAL_DELAY = 400L
     }
 
+    private fun drawAndCount(): Card {
+        val card = shoe.draw()
+        runningCount += card.rank.hiLoValue
+        _state.update { it.copy(runningCount = runningCount) }
+        return card
+    }
+
+    private fun countHoleCard() {
+        runningCount += pendingHoleCardValue
+        pendingHoleCardValue = 0
+        _state.update { it.copy(runningCount = runningCount) }
+    }
+
     fun startGame(rules: CasinoRules) {
         dealJob?.cancel()
         shoe = Shoe(rules.numberOfDecks)
+        runningCount = 0
         _state.value = GameState(
             phase = GamePhase.BETTING,
             rules = rules,
@@ -55,6 +72,10 @@ class GameViewModel : ViewModel() {
 
     fun toggleCoach() {
         _state.update { it.copy(coachEnabled = !it.coachEnabled, coachFeedback = "") }
+    }
+
+    fun toggleCount() {
+        _state.update { it.copy(showCount = !it.showCount) }
     }
 
     private fun evaluateCoach(chosenAction: PlayerAction) {
@@ -86,13 +107,16 @@ class GameViewModel : ViewModel() {
 
         if (shoe.needsReshuffle()) {
             shoe.shuffle()
+            runningCount = 0
+            _state.update { it.copy(runningCount = 0) }
         }
 
         // Draw all 4 cards upfront for consistent shoe state
-        val playerCard1 = shoe.draw()
-        val dealerCard1 = shoe.draw()
-        val playerCard2 = shoe.draw()
-        val dealerCard2 = shoe.draw()
+        val playerCard1 = drawAndCount()
+        val dealerCard1 = drawAndCount()
+        val playerCard2 = drawAndCount()
+        val dealerCard2 = shoe.draw() // hole card — counted when revealed
+        pendingHoleCardValue = dealerCard2.rank.hiLoValue
 
         // Start with empty hands, transition to DEALING
         _state.update {
@@ -202,6 +226,7 @@ class GameViewModel : ViewModel() {
         if (_state.value.coachEnabled) {
             _state.update { it.copy(coachFeedback = "Basic strategy: decline even money") }
         }
+        countHoleCard()
         _state.update { state ->
             val payout = state.currentBet * 2
             state.copy(
@@ -272,7 +297,7 @@ class GameViewModel : ViewModel() {
         if (state.phase != GamePhase.PLAYER_TURN) return
         evaluateCoach(PlayerAction.HIT)
 
-        val card = shoe.draw()
+        val card = drawAndCount()
         val updatedHand = state.activeHand?.addCard(card) ?: return
         val updatedHands = state.playerHands.toMutableList()
         updatedHands[state.activeHandIndex] = updatedHand
@@ -307,7 +332,7 @@ class GameViewModel : ViewModel() {
         val hand = state.activeHand ?: return
         if (state.chips < hand.bet) return
 
-        val card = shoe.draw()
+        val card = drawAndCount()
         val updatedHand = hand.copy(
             cards = hand.cards + card,
             bet = hand.bet * 2,
@@ -336,13 +361,13 @@ class GameViewModel : ViewModel() {
         val isAceSplit = hand.cards.first().rank.isAce
 
         val hand1 = Hand(
-            cards = listOf(hand.cards[0], shoe.draw()),
+            cards = listOf(hand.cards[0], drawAndCount()),
             bet = hand.bet,
             isSplitHand = true,
             splitFromAces = isAceSplit && !state.rules.hitSplitAces
         )
         val hand2 = Hand(
-            cards = listOf(hand.cards[1], shoe.draw()),
+            cards = listOf(hand.cards[1], drawAndCount()),
             bet = hand.bet,
             isSplitHand = true,
             splitFromAces = isAceSplit && !state.rules.hitSplitAces
@@ -421,6 +446,7 @@ class GameViewModel : ViewModel() {
     }
 
     private fun playDealerHand() {
+        countHoleCard()
         _state.update {
             it.copy(
                 phase = GamePhase.DEALER_TURN,
@@ -436,7 +462,7 @@ class GameViewModel : ViewModel() {
             var dealerHand = _state.value.dealerHand
             while (DealerStrategy.shouldHit(dealerHand, _state.value.rules)) {
                 delay(DEALER_DRAW_DELAY)
-                val card = shoe.draw()
+                val card = drawAndCount()
                 dealerHand = dealerHand.addCard(card)
                 _state.update { it.copy(dealerHand = dealerHand) }
             }
@@ -448,6 +474,9 @@ class GameViewModel : ViewModel() {
     }
 
     private fun resolveRound() {
+        if (!_state.value.showDealerHoleCard) {
+            countHoleCard()
+        }
         val state = _state.value
 
         val result = PayoutCalculator.calculateResults(

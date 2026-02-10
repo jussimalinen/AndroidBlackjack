@@ -55,7 +55,10 @@ fun GameScreen(
             handsPlayed = state.handsPlayed,
             handsWon = state.handsWon,
             coachEnabled = state.coachEnabled,
-            onToggleCoach = viewModel::toggleCoach
+            onToggleCoach = viewModel::toggleCoach,
+            showCount = state.showCount,
+            runningCount = state.runningCount,
+            onToggleCount = viewModel::toggleCount
         )
 
         DealerArea(

@@ -37,6 +37,9 @@ fun GameInfoBar(
     handsWon: Int,
     coachEnabled: Boolean,
     onToggleCoach: () -> Unit,
+    showCount: Boolean,
+    runningCount: Int,
+    onToggleCount: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
@@ -73,21 +76,39 @@ fun GameInfoBar(
                 fontSize = 13.sp
             )
 
-            val coachColor = if (coachEnabled) Color(0xFF4CAF50) else Color.White.copy(alpha = 0.4f)
-            Text(
-                text = "Coach",
-                color = coachColor,
-                fontSize = 12.sp,
-                fontWeight = if (coachEnabled) FontWeight.Bold else FontWeight.Normal,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .then(
-                        if (coachEnabled) Modifier.background(Color(0xFF4CAF50).copy(alpha = 0.2f))
-                        else Modifier.border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                    )
-                    .clickable { onToggleCoach() }
-                    .padding(horizontal = 8.dp, vertical = 3.dp)
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                val coachColor = if (coachEnabled) Color(0xFF4CAF50) else Color.White.copy(alpha = 0.4f)
+                Text(
+                    text = "Coach",
+                    color = coachColor,
+                    fontSize = 12.sp,
+                    fontWeight = if (coachEnabled) FontWeight.Bold else FontWeight.Normal,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .then(
+                            if (coachEnabled) Modifier.background(Color(0xFF4CAF50).copy(alpha = 0.2f))
+                            else Modifier.border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        )
+                        .clickable { onToggleCoach() }
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                )
+
+                val countColor = if (showCount) Color(0xFF42A5F5) else Color.White.copy(alpha = 0.4f)
+                Text(
+                    text = if (showCount) "Count: ${if (runningCount >= 0) "+$runningCount" else "$runningCount"}" else "Count",
+                    color = countColor,
+                    fontSize = 12.sp,
+                    fontWeight = if (showCount) FontWeight.Bold else FontWeight.Normal,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .then(
+                            if (showCount) Modifier.background(Color(0xFF42A5F5).copy(alpha = 0.2f))
+                            else Modifier.border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        )
+                        .clickable { onToggleCount() }
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                )
+            }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(

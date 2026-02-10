@@ -17,4 +17,9 @@ enum class Rank(val symbol: String, val baseValue: Int) {
 
     val isAce: Boolean get() = this == ACE
     val isTenValue: Boolean get() = baseValue == 10 && this != ACE
+    val hiLoValue: Int get() = when {
+        baseValue in 2..6 -> +1
+        baseValue in 7..9 -> 0
+        else -> -1 // 10, J, Q, K, A
+    }
 }
