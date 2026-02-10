@@ -78,7 +78,14 @@ class GameViewModel : ViewModel() {
     }
 
     fun toggleCoach() {
-        _state.update { it.copy(coachEnabled = !it.coachEnabled, coachFeedback = "") }
+        _state.update {
+            it.copy(
+                coachEnabled = !it.coachEnabled,
+                coachFeedback = "",
+                coachCorrect = 0,
+                coachTotal = 0
+            )
+        }
     }
 
     fun toggleCount() {
@@ -98,13 +105,20 @@ class GameViewModel : ViewModel() {
             rules = state.rules
         )
 
-        val feedback = if (chosenAction == optimal) {
+        val correct = chosenAction == optimal
+        val feedback = if (correct) {
             "Correct! ${chosenAction.displayName} was optimal."
         } else {
             "Optimal play: ${optimal.displayName} (you chose ${chosenAction.displayName})"
         }
 
-        _state.update { it.copy(coachFeedback = feedback) }
+        _state.update {
+            it.copy(
+                coachFeedback = feedback,
+                coachCorrect = it.coachCorrect + if (correct) 1 else 0,
+                coachTotal = it.coachTotal + 1
+            )
+        }
     }
 
     fun deal() {
@@ -468,7 +482,7 @@ class GameViewModel : ViewModel() {
             rules = state.rules
         )
 
-        _state.update { it.copy(availableActions = actions, coachFeedback = "") }
+        _state.update { it.copy(availableActions = actions) }
     }
 
     private fun playDealerHand() {

@@ -79,16 +79,30 @@ fun GameScreen(
 
         if (state.coachEnabled && state.coachFeedback.isNotEmpty()) {
             val isCorrect = state.coachFeedback.startsWith("Correct")
-            Text(
-                text = state.coachFeedback,
-                color = if (isCorrect) Color(0xFF4CAF50) else Color(0xFFFF9800),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-            )
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = state.coachFeedback,
+                    color = if (isCorrect) Color(0xFF4CAF50) else Color(0xFFFF9800),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
+                )
+                if (state.coachTotal > 0) {
+                    Text(
+                        text = "${state.coachCorrect}/${state.coachTotal}",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
 
         // Bottom action area — fixed height so card areas above don't shift
