@@ -41,7 +41,7 @@ class GameViewModel : ViewModel() {
     private fun updateCountState() {
         val decksRemaining = (shoe.cardsRemaining / 52f).coerceAtLeast(0.5f)
         val trueCount = runningCount / decksRemaining
-        _state.update { it.copy(runningCount = runningCount, trueCount = trueCount) }
+        _state.update { it.copy(shoePenetration = shoe.penetration, runningCount = runningCount, trueCount = trueCount) }
     }
 
     private fun drawAndCount(): Card {
@@ -114,7 +114,7 @@ class GameViewModel : ViewModel() {
         if (shoe.needsReshuffle()) {
             shoe.shuffle()
             runningCount = 0
-            _state.update { it.copy(runningCount = 0) }
+            _state.update { it.copy(shoePenetration = 0f, runningCount = 0, trueCount = 0f) }
         }
 
         // Draw all 4 cards upfront for consistent shoe state

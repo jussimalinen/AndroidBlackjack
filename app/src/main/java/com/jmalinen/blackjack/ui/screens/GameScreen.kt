@@ -51,7 +51,7 @@ fun GameScreen(
         GameInfoBar(
             chips = state.chips,
             currentBet = state.currentBet,
-            shoePenetration = 0f, // shoe is internal to viewmodel
+            shoePenetration = state.shoePenetration,
             handsPlayed = state.handsPlayed,
             handsWon = state.handsWon,
             coachEnabled = state.coachEnabled,
