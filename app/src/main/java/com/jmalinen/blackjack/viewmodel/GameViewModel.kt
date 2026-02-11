@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.jmalinen.blackjack.engine.BasicStrategyAdvisor
 import com.jmalinen.blackjack.engine.BlackjackEngine
 import com.jmalinen.blackjack.engine.DealerStrategy
+import com.jmalinen.blackjack.engine.DeviationAdvisor
 import com.jmalinen.blackjack.engine.PayoutCalculator
 import com.jmalinen.blackjack.model.Card
 import com.jmalinen.blackjack.model.CasinoRules
@@ -92,26 +93,53 @@ class GameViewModel : ViewModel() {
         _state.update { it.copy(showCount = !it.showCount) }
     }
 
+    fun toggleDeviations() {
+        _state.update { it.copy(deviationsEnabled = !it.deviationsEnabled) }
+    }
+
     private fun evaluateCoach(chosenAction: PlayerAction) {
         val state = _state.value
         if (!state.coachEnabled) return
         val hand = state.activeHand ?: return
         val dealerUpCard = state.dealerHand.cards.firstOrNull() ?: return
 
-        val optimal = BasicStrategyAdvisor.optimalAction(
-            hand = hand,
-            dealerUpCard = dealerUpCard,
-            availableActions = state.availableActions,
-            rules = state.rules
-        )
+        val feedback: String
+        val optimal: PlayerAction
 
-        val correct = chosenAction == optimal
-        val feedback = if (correct) {
-            "Correct! ${chosenAction.displayName} was optimal."
+        if (state.deviationsEnabled) {
+            val result = DeviationAdvisor.optimalAction(
+                hand = hand,
+                dealerUpCard = dealerUpCard,
+                availableActions = state.availableActions,
+                rules = state.rules,
+                runningCount = runningCount,
+                trueCount = state.trueCount
+            )
+            optimal = result.action
+            val correct = chosenAction == optimal
+            feedback = if (result.isDeviation) {
+                if (correct) "Correct! ${result.description}"
+                else "${result.description} (you chose ${chosenAction.displayName})"
+            } else {
+                if (correct) "Correct! ${chosenAction.displayName} was optimal."
+                else "Optimal play: ${optimal.displayName} (you chose ${chosenAction.displayName})"
+            }
         } else {
-            "Optimal play: ${optimal.displayName} (you chose ${chosenAction.displayName})"
+            optimal = BasicStrategyAdvisor.optimalAction(
+                hand = hand,
+                dealerUpCard = dealerUpCard,
+                availableActions = state.availableActions,
+                rules = state.rules
+            )
+            val correct = chosenAction == optimal
+            feedback = if (correct) {
+                "Correct! ${chosenAction.displayName} was optimal."
+            } else {
+                "Optimal play: ${optimal.displayName} (you chose ${chosenAction.displayName})"
+            }
         }
 
+        val correct = chosenAction == optimal
         _state.update {
             it.copy(
                 coachFeedback = feedback,
@@ -243,7 +271,13 @@ class GameViewModel : ViewModel() {
 
     fun takeInsurance() {
         if (_state.value.coachEnabled) {
-            _state.update { it.copy(coachFeedback = "Basic strategy: never take insurance") }
+            val devResult = if (_state.value.deviationsEnabled) DeviationAdvisor.insuranceDeviation(_state.value.trueCount) else null
+            val feedback = if (devResult != null) {
+                "Correct! ${devResult.description}"
+            } else {
+                "Basic strategy: never take insurance"
+            }
+            _state.update { it.copy(coachFeedback = feedback) }
         }
         _state.update { state ->
             val cost = state.currentBet / 2
@@ -257,14 +291,26 @@ class GameViewModel : ViewModel() {
 
     fun declineInsurance() {
         if (_state.value.coachEnabled) {
-            _state.update { it.copy(coachFeedback = "Correct! Never take insurance.") }
+            val devResult = if (_state.value.deviationsEnabled) DeviationAdvisor.insuranceDeviation(_state.value.trueCount) else null
+            val feedback = if (devResult != null) {
+                "${devResult.description} (you declined)"
+            } else {
+                "Correct! Never take insurance."
+            }
+            _state.update { it.copy(coachFeedback = feedback) }
         }
         afterInsurance()
     }
 
     fun takeEvenMoney() {
         if (_state.value.coachEnabled) {
-            _state.update { it.copy(coachFeedback = "Basic strategy: decline even money") }
+            val devResult = if (_state.value.deviationsEnabled) DeviationAdvisor.insuranceDeviation(_state.value.trueCount) else null
+            val feedback = if (devResult != null) {
+                "Correct! ${devResult.description}"
+            } else {
+                "Basic strategy: decline even money"
+            }
+            _state.update { it.copy(coachFeedback = feedback) }
         }
         countHoleCard()
         _state.update { state ->
@@ -284,7 +330,13 @@ class GameViewModel : ViewModel() {
 
     fun declineEvenMoney() {
         if (_state.value.coachEnabled) {
-            _state.update { it.copy(coachFeedback = "Correct! Decline even money.") }
+            val devResult = if (_state.value.deviationsEnabled) DeviationAdvisor.insuranceDeviation(_state.value.trueCount) else null
+            val feedback = if (devResult != null) {
+                "${devResult.description} (you declined)"
+            } else {
+                "Correct! Decline even money."
+            }
+            _state.update { it.copy(coachFeedback = feedback) }
         }
         afterInsurance()
     }

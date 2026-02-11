@@ -37,6 +37,8 @@ fun GameInfoBar(
     handsWon: Int,
     coachEnabled: Boolean,
     onToggleCoach: () -> Unit,
+    deviationsEnabled: Boolean,
+    onToggleDeviations: () -> Unit,
     showCount: Boolean,
     runningCount: Int,
     trueCount: Float,
@@ -93,6 +95,24 @@ fun GameInfoBar(
                         .clickable { onToggleCoach() }
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 )
+
+                if (coachEnabled) {
+                    val devColor = if (deviationsEnabled) Color(0xFFFF9800) else Color.White.copy(alpha = 0.4f)
+                    Text(
+                        text = "Dev",
+                        color = devColor,
+                        fontSize = 12.sp,
+                        fontWeight = if (deviationsEnabled) FontWeight.Bold else FontWeight.Normal,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .then(
+                                if (deviationsEnabled) Modifier.background(Color(0xFFFF9800).copy(alpha = 0.2f))
+                                else Modifier.border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                            )
+                            .clickable { onToggleDeviations() }
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
 
                 val countColor = if (showCount) Color(0xFF42A5F5) else Color.White.copy(alpha = 0.4f)
                 val trueCountStr = if (trueCount >= 0) "+%.1f".format(trueCount) else "%.1f".format(trueCount)

@@ -20,6 +20,7 @@ data class GameState(
     val coachFeedback: String = "",
     val coachCorrect: Int = 0,
     val coachTotal: Int = 0,
+    val deviationsEnabled: Boolean = false,
     val shoePenetration: Float = 0f,
     val runningCount: Int = 0,
     val trueCount: Float = 0f,

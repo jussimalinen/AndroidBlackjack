@@ -56,6 +56,8 @@ fun GameScreen(
             handsWon = state.handsWon,
             coachEnabled = state.coachEnabled,
             onToggleCoach = viewModel::toggleCoach,
+            deviationsEnabled = state.deviationsEnabled,
+            onToggleDeviations = viewModel::toggleDeviations,
             showCount = state.showCount,
             runningCount = state.runningCount,
             trueCount = state.trueCount,
