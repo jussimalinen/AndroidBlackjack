@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -94,11 +95,18 @@ fun CardView(
     }
 }
 
+val LocalAnimationsEnabled = compositionLocalOf { true }
+
 @Composable
 fun AnimatedCardView(
     card: Card,
     modifier: Modifier = Modifier
 ) {
+    if (!LocalAnimationsEnabled.current) {
+        CardView(card = card, modifier = modifier)
+        return
+    }
+
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 
