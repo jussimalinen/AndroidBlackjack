@@ -121,7 +121,6 @@ internal fun GameScreenContent(
         Column(modifier = Modifier.fillMaxSize()) {
         GameInfoBar(
             chips = state.chips,
-            currentBet = state.currentBet,
             shoePenetration = state.shoePenetration,
             handsPlayed = state.handsPlayed,
             handsWon = state.handsWon,

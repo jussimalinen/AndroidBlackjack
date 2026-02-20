@@ -32,7 +32,6 @@ import com.jmalinen.blackjack.ui.theme.GoldAccent
 @Composable
 fun GameInfoBar(
     chips: Int,
-    currentBet: Int,
     shoePenetration: Float,
     handsPlayed: Int,
     handsWon: Int,
@@ -140,20 +139,6 @@ fun GameInfoBar(
 
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Bet:",
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 14.sp
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "\$$currentBet",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
         }
 
         Spacer(modifier = Modifier.height(4.dp))
