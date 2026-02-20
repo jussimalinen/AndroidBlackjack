@@ -232,7 +232,8 @@ internal fun GameScreenContent(
                     ResultArea(
                         message = state.roundMessage,
                         payout = state.roundPayout,
-                        onNewRound = onNewRound
+                        onNewRound = onNewRound,
+                        compact = scales.compactActions
                     )
                 }
 
@@ -240,7 +241,8 @@ internal fun GameScreenContent(
                     GameOverArea(
                         handsPlayed = state.handsPlayed,
                         handsWon = state.handsWon,
-                        onReset = onReset
+                        onReset = onReset,
+                        compact = scales.compactActions
                     )
                 }
             }
@@ -281,16 +283,18 @@ private data class UiScales(
     val dealerScale: Float,
     val playerScale: Float,
     val extraPlayerScale: Float,
-    val actionBoxHeight: Dp
+    val actionBoxHeight: Dp,
+    val compactActions: Boolean = false
 )
 
 private fun computeScales(maxWidth: Dp, hasExtraPlayers: Boolean): UiScales {
     return when {
         maxWidth < 380.dp -> UiScales(
             dealerScale = 0.65f,
-            playerScale = if (hasExtraPlayers) 0.45f else 0.65f,
-            extraPlayerScale = 0.4f,
-            actionBoxHeight = 100.dp
+            playerScale = if (hasExtraPlayers) 0.50f else 0.65f,
+            extraPlayerScale = 0.50f,
+            actionBoxHeight = 120.dp,
+            compactActions = true
         )
         maxWidth < 600.dp -> UiScales(
             dealerScale = 1.0f,
@@ -311,23 +315,24 @@ private fun computeScales(maxWidth: Dp, hasExtraPlayers: Boolean): UiScales {
 private fun ResultArea(
     message: String,
     payout: Int,
-    onNewRound: () -> Unit
+    onNewRound: () -> Unit,
+    compact: Boolean = false
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(if (compact) 8.dp else 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = message,
             color = Color.White,
-            fontSize = 20.sp,
+            fontSize = if (compact) 16.sp else 20.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(if (compact) 4.dp else 12.dp))
 
         Button(
             onClick = onNewRound,
@@ -337,7 +342,7 @@ private fun ResultArea(
             ),
             shape = RoundedCornerShape(24.dp)
         ) {
-            Text("Next Hand", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text("Next Hand", fontWeight = FontWeight.Bold, fontSize = if (compact) 14.sp else 16.sp)
         }
     }
 }
@@ -346,32 +351,36 @@ private fun ResultArea(
 private fun GameOverArea(
     handsPlayed: Int,
     handsWon: Int,
-    onReset: () -> Unit
+    onReset: () -> Unit,
+    compact: Boolean = false
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(if (compact) 4.dp else 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "Game Over!",
             color = Color(0xFFEF5350),
-            fontSize = 24.sp,
+            fontSize = if (compact) 18.sp else 24.sp,
             fontWeight = FontWeight.Bold
         )
+        if (!compact) {
+            Text(
+                text = "You're out of chips",
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 14.sp
+            )
+        }
         Text(
-            text = "You're out of chips",
+            text = if (compact) "Out of chips · Played: $handsPlayed  Won: $handsWon"
+                else "Played: $handsPlayed  Won: $handsWon",
             color = Color.White.copy(alpha = 0.7f),
-            fontSize = 14.sp
-        )
-        Text(
-            text = "Played: $handsPlayed  Won: $handsWon",
-            color = Color.White.copy(alpha = 0.7f),
-            fontSize = 13.sp
+            fontSize = if (compact) 11.sp else 13.sp
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(if (compact) 2.dp else 12.dp))
 
         Button(
             onClick = onReset,
@@ -380,7 +389,7 @@ private fun GameOverArea(
                 contentColor = Color.Black
             )
         ) {
-            Text("Play Again", fontWeight = FontWeight.Bold)
+            Text("Play Again", fontWeight = FontWeight.Bold, fontSize = if (compact) 13.sp else 14.sp)
         }
     }
 }
