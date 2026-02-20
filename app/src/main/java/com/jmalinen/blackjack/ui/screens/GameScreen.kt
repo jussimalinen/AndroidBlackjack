@@ -142,7 +142,7 @@ internal fun GameScreenContent(
         DealerArea(
             hand = state.dealerHand,
             showHoleCard = state.showDealerHoleCard,
-            modifier = Modifier.weight(1f),
+            modifier = if (hasExtraPlayers) Modifier else Modifier.weight(1f),
             compact = hasExtraPlayers,
             cardScale = scales.dealerScale
         )
@@ -160,7 +160,7 @@ internal fun GameScreenContent(
             handResults = state.handResults,
             phase = state.phase,
             currentBet = state.currentBet,
-            modifier = Modifier.weight(if (hasExtraPlayers) 1.5f else 1.2f),
+            modifier = Modifier.weight(if (hasExtraPlayers) 1f else 1.2f),
             cardScale = scales.playerScale
         )
 
@@ -285,22 +285,26 @@ private data class UiScales(
 )
 
 private fun computeScales(maxWidth: Dp, hasExtraPlayers: Boolean): UiScales {
-    val baseScale = when {
-        maxWidth < 380.dp -> 0.75f
-        maxWidth < 600.dp -> 1.0f
-        else -> 1.4f
+    return when {
+        maxWidth < 380.dp -> UiScales(
+            dealerScale = 0.65f,
+            playerScale = if (hasExtraPlayers) 0.45f else 0.65f,
+            extraPlayerScale = 0.4f,
+            actionBoxHeight = 100.dp
+        )
+        maxWidth < 600.dp -> UiScales(
+            dealerScale = 1.0f,
+            playerScale = if (hasExtraPlayers) 0.75f else 1.0f,
+            extraPlayerScale = 0.65f,
+            actionBoxHeight = 160.dp
+        )
+        else -> UiScales(
+            dealerScale = 1.4f,
+            playerScale = if (hasExtraPlayers) 1.19f else 1.4f,
+            extraPlayerScale = 1.05f,
+            actionBoxHeight = 200.dp
+        )
     }
-    val actionHeight = when {
-        maxWidth < 380.dp -> 130.dp
-        maxWidth < 600.dp -> 160.dp
-        else -> 200.dp
-    }
-    return UiScales(
-        dealerScale = baseScale,
-        playerScale = if (hasExtraPlayers) baseScale * 0.85f else baseScale,
-        extraPlayerScale = baseScale * 0.75f,
-        actionBoxHeight = actionHeight
-    )
 }
 
 @Composable

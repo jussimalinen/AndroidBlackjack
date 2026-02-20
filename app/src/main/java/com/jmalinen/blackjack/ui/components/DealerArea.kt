@@ -32,7 +32,7 @@ fun DealerArea(
         label = "holeCardFlip"
     )
 
-    val padding = if (compact) 8.dp else 16.dp
+    val padding = if (compact) 4.dp else 16.dp
     Column(
         modifier = modifier
             .fillMaxWidth()
