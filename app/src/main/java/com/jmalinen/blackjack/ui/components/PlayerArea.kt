@@ -29,13 +29,15 @@ fun PlayerArea(
     handResults: Map<Int, HandResult>,
     phase: GamePhase,
     currentBet: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    cardScale: Float = 1f
 ) {
+    val verticalPadding = if (cardScale < 1f) 4.dp else 16.dp
     Column(
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = verticalPadding),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (hands.size > 1) {
@@ -62,7 +64,8 @@ fun PlayerArea(
                     hand = hand,
                     isActive = index == activeHandIndex && phase == GamePhase.PLAYER_TURN,
                     showScore = true,
-                    result = handResults[index]
+                    result = handResults[index],
+                    cardScale = cardScale
                 )
             }
         }

@@ -135,7 +135,8 @@ internal fun GameScreenContent(
         DealerArea(
             hand = state.dealerHand,
             showHoleCard = state.showDealerHoleCard,
-            modifier = Modifier.weight(if (hasExtraPlayers) 0.8f else 1f)
+            modifier = Modifier.weight(if (hasExtraPlayers) 0.7f else 1f),
+            compact = hasExtraPlayers
         )
 
         if (hasExtraPlayers) {
@@ -150,7 +151,8 @@ internal fun GameScreenContent(
             handResults = state.handResults,
             phase = state.phase,
             currentBet = state.currentBet,
-            modifier = Modifier.weight(if (hasExtraPlayers) 1.4f else 1.2f)
+            modifier = Modifier.weight(if (hasExtraPlayers) 1.5f else 1.2f),
+            cardScale = if (hasExtraPlayers) 0.85f else 1f
         )
 
         // Bottom action area — fixed height so card areas above don't shift

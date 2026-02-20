@@ -22,7 +22,8 @@ import com.jmalinen.blackjack.model.Hand
 fun DealerArea(
     hand: Hand,
     showHoleCard: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    compact: Boolean = false
 ) {
     val flipProgress by animateFloatAsState(
         targetValue = if (showHoleCard) 1f else 0f,
@@ -30,10 +31,11 @@ fun DealerArea(
         label = "holeCardFlip"
     )
 
+    val padding = if (compact) 8.dp else 16.dp
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(padding),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {

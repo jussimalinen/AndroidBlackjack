@@ -420,6 +420,61 @@ fun ScreenshotExtraPlayersTripleSplit() {
     }
 }
 
+@Preview(showBackground = true, name = "Extra Players + Many Cards")
+@Composable
+fun ScreenshotExtraPlayersManyCards() {
+    StaticPreview {
+        GameScreenContent(
+            state = GameState(
+                phase = GamePhase.ROUND_COMPLETE,
+                rules = CasinoRules(extraPlayers = 2, maxSplitHands = 4),
+                playerHands = listOf(
+                    hand(card(EIGHT, SPADES), card(THREE, DIAMONDS), card(TWO, CLUBS),
+                        card(FOUR, HEARTS), card(THREE, SPADES), bet = 25,
+                        isSplitHand = true, isStanding = true),
+                    hand(card(EIGHT, HEARTS), card(TWO, CLUBS), card(FIVE, DIAMONDS),
+                        card(SIX, SPADES), bet = 50,
+                        isSplitHand = true, isStanding = true),
+                    hand(card(EIGHT, CLUBS), card(SEVEN, HEARTS), card(FOUR, SPADES), bet = 25,
+                        isSplitHand = true, isStanding = true),
+                    hand(card(EIGHT, DIAMONDS), card(THREE, CLUBS), card(FIVE, HEARTS),
+                        card(FOUR, DIAMONDS), bet = 25,
+                        isSplitHand = true, isStanding = true)
+                ),
+                activeHandIndex = 0,
+                dealerHand = Hand(cards = listOf(
+                    card(SIX, CLUBS), card(TEN, DIAMONDS), card(SEVEN, HEARTS)
+                )),
+                showDealerHoleCard = true,
+                chips = 1025,
+                currentBet = 25,
+                handResults = mapOf(
+                    0 to HandResult.WIN,
+                    1 to HandResult.WIN,
+                    2 to HandResult.LOSE,
+                    3 to HandResult.WIN
+                ),
+                roundPayout = 125,
+                roundMessage = "You win \$75!",
+                extraPlayers = listOf(
+                    ExtraPlayerState(
+                        hand = hand(card(KING, DIAMONDS), card(THREE, CLUBS),
+                            card(FOUR, HEARTS), card(TWO, SPADES)),
+                        result = HandResult.LOSE
+                    ),
+                    ExtraPlayerState(
+                        hand = hand(card(FIVE, SPADES), card(SIX, HEARTS),
+                            card(FOUR, DIAMONDS), card(THREE, CLUBS), card(TWO, HEARTS)),
+                        result = HandResult.WIN
+                    )
+                ),
+                handsPlayed = 20,
+                handsWon = 11
+            )
+        )
+    }
+}
+
 @Preview(showBackground = true, name = "Count Display")
 @Composable
 fun ScreenshotCountDisplay() {
