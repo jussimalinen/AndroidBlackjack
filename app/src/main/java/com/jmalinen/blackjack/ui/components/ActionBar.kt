@@ -1,7 +1,9 @@
 package com.jmalinen.blackjack.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jmalinen.blackjack.model.PlayerAction
@@ -30,14 +33,13 @@ fun ActionBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
+            .padding(horizontal = 4.dp, vertical = 12.dp)
     ) {
-        ActionButton("Hit", PlayerAction.HIT in availableActions, onHit)
-        ActionButton("Stand", PlayerAction.STAND in availableActions, onStand)
-        ActionButton("Double", PlayerAction.DOUBLE_DOWN in availableActions, onDouble)
-        ActionButton("Split", PlayerAction.SPLIT in availableActions, onSplit)
-        ActionButton("Surr.", PlayerAction.SURRENDER in availableActions, onSurrender)
+        ActionButton("Hit", PlayerAction.HIT in availableActions, onHit, Modifier.weight(1f))
+        ActionButton("Stand", PlayerAction.STAND in availableActions, onStand, Modifier.weight(1f))
+        ActionButton("Double", PlayerAction.DOUBLE_DOWN in availableActions, onDouble, Modifier.weight(1f))
+        ActionButton("Split", PlayerAction.SPLIT in availableActions, onSplit, Modifier.weight(1f))
+        ActionButton("Surr.", PlayerAction.SURRENDER in availableActions, onSurrender, Modifier.weight(1f))
     }
 }
 
@@ -70,7 +72,8 @@ fun InsuranceBar(
 private fun ActionButton(
     text: String,
     enabled: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Button(
         onClick = onClick,
@@ -81,12 +84,18 @@ private fun ActionButton(
             contentColor = Color.Black,
             disabledContainerColor = Color.Gray.copy(alpha = 0.3f),
             disabledContentColor = Color.White.copy(alpha = 0.4f)
-        )
+        ),
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+        modifier = modifier
+            .padding(horizontal = 2.dp)
+            .defaultMinSize(minWidth = 1.dp, minHeight = 36.dp)
     ) {
         Text(
             text = text,
             fontWeight = FontWeight.Bold,
-            fontSize = 13.sp
+            fontSize = 13.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
