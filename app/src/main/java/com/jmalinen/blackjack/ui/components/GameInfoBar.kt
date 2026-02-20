@@ -46,6 +46,9 @@ fun GameInfoBar(
     onToggleCount: () -> Unit,
     onShowChart: () -> Unit,
     onEnd: () -> Unit,
+    coachFeedback: String = "",
+    coachCorrect: Int = 0,
+    coachTotal: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
@@ -178,12 +181,27 @@ fun GameInfoBar(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             OutlinedButton(onClick = onEnd) {
                 Text("End", color = Color.White)
             }
             OutlinedButton(onClick = onShowChart) {
                 Text("Chart", color = Color.White)
+            }
+            if (coachEnabled && coachFeedback.isNotEmpty()) {
+                val isCorrect = coachFeedback.startsWith("Correct")
+                Text(
+                    text = coachFeedback +
+                        if (coachTotal > 0) " ($coachCorrect/$coachTotal)" else "",
+                    color = if (isCorrect) Color(0xFF4CAF50) else Color(0xFFFF9800),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
             }
         }
     }

@@ -1,11 +1,9 @@
 package com.jmalinen.blackjack.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -136,7 +134,10 @@ internal fun GameScreenContent(
             trueCount = state.trueCount,
             onToggleCount = onToggleCount,
             onShowChart = onShowChart,
-            onEnd = onEnd
+            onEnd = onEnd,
+            coachFeedback = state.coachFeedback,
+            coachCorrect = state.coachCorrect,
+            coachTotal = state.coachTotal
         )
 
         DealerArea(
@@ -248,33 +249,6 @@ internal fun GameScreenContent(
             }
         }
 
-        if (state.coachEnabled && state.coachFeedback.isNotEmpty()) {
-            val isCorrect = state.coachFeedback.startsWith("Correct")
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = state.coachFeedback,
-                    color = if (isCorrect) Color(0xFF4CAF50) else Color(0xFFFF9800),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f)
-                )
-                if (state.coachTotal > 0) {
-                    Text(
-                        text = "${state.coachCorrect}/${state.coachTotal}",
-                        color = Color.White.copy(alpha = 0.6f),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
         } // Column
     } // BoxWithConstraints
 }
