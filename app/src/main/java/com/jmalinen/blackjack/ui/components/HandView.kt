@@ -15,6 +15,8 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,8 +31,13 @@ fun HandView(
     isActive: Boolean,
     showScore: Boolean,
     result: HandResult?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    cardScale: Float = 1f
 ) {
+    val scaledCardWidth = (70 * cardScale).toInt()
+    val scaledCardOverlap = (28 * cardScale).toInt()
+    val scaledBoxHeight = (110 * cardScale).dp
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.padding(4.dp)
@@ -43,22 +50,20 @@ fun HandView(
             Text(
                 text = scoreText,
                 color = Color.White,
-                fontSize = 16.sp,
+                fontSize = (16 * cardScale).sp,
                 fontWeight = FontWeight.Bold
             )
         }
 
-        val cardWidth = 70
-        val cardOverlap = 28
         val handWidth = if (hand.cards.size > 1) {
-            cardWidth + (hand.cards.size - 1) * cardOverlap
+            scaledCardWidth + (hand.cards.size - 1) * scaledCardOverlap
         } else {
-            cardWidth
+            scaledCardWidth
         }
 
         Box(
             modifier = Modifier
-                .height(110.dp)
+                .height(scaledBoxHeight)
                 .widthIn(min = handWidth.dp)
                 .then(
                     if (isActive) Modifier.border(
@@ -78,8 +83,15 @@ fun HandView(
                         AnimatedCardView(
                             card = card,
                             modifier = Modifier
-                                .offset(x = (index * 28).dp)
+                                .offset(x = (index * scaledCardOverlap).dp)
                                 .zIndex(index.toFloat())
+                                .then(
+                                    if (cardScale < 1f) Modifier.graphicsLayer {
+                                        scaleX = cardScale
+                                        scaleY = cardScale
+                                        transformOrigin = TransformOrigin(0f, 0f)
+                                    } else Modifier
+                                )
                         )
                     }
                 }
@@ -90,7 +102,7 @@ fun HandView(
             Text(
                 text = "\$${hand.bet}",
                 color = GoldAccent,
-                fontSize = 14.sp,
+                fontSize = (14 * cardScale).sp,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -106,7 +118,7 @@ fun HandView(
             Text(
                 text = result.displayName,
                 color = resultColor,
-                fontSize = 16.sp,
+                fontSize = (16 * cardScale).sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .background(

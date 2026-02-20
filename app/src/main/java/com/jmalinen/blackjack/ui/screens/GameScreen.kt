@@ -29,10 +29,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jmalinen.blackjack.engine.BasicStrategyAdvisor
 import com.jmalinen.blackjack.model.GamePhase
+import com.jmalinen.blackjack.model.GameState
+import com.jmalinen.blackjack.model.PlayerAction
 import com.jmalinen.blackjack.model.SurrenderPolicy
 import com.jmalinen.blackjack.ui.components.ActionBar
 import com.jmalinen.blackjack.ui.components.BetSelector
 import com.jmalinen.blackjack.ui.components.DealerArea
+import com.jmalinen.blackjack.ui.components.ExtraPlayersArea
 import com.jmalinen.blackjack.ui.components.GameInfoBar
 import com.jmalinen.blackjack.ui.components.InsuranceBar
 import com.jmalinen.blackjack.ui.components.PlayerArea
@@ -51,6 +54,59 @@ fun GameScreen(
     val chartData = remember(state.rules) { BasicStrategyAdvisor.getChartData(state.rules) }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        GameScreenContent(
+            state = state,
+            onBetChanged = viewModel::adjustBet,
+            onDeal = viewModel::deal,
+            onHit = viewModel::hit,
+            onStand = viewModel::stand,
+            onDouble = viewModel::doubleDown,
+            onSplit = viewModel::split,
+            onSurrender = viewModel::surrender,
+            onInsurance = viewModel::takeInsurance,
+            onDeclineInsurance = viewModel::declineInsurance,
+            onEvenMoney = viewModel::takeEvenMoney,
+            onDeclineEvenMoney = viewModel::declineEvenMoney,
+            onNewRound = viewModel::newRound,
+            onReset = viewModel::resetGame,
+            onToggleCoach = viewModel::toggleCoach,
+            onToggleDeviations = viewModel::toggleDeviations,
+            onToggleCount = viewModel::toggleCount,
+            onShowChart = { showChart = true },
+            onEnd = onNavigateToSettings
+        )
+
+        StrategyChartOverlay(
+            visible = showChart,
+            chartData = chartData,
+            hasSurrender = state.rules.surrenderPolicy != SurrenderPolicy.NONE,
+            onDismiss = { showChart = false }
+        )
+    }
+}
+
+@Composable
+internal fun GameScreenContent(
+    state: GameState,
+    onBetChanged: (Int) -> Unit = {},
+    onDeal: () -> Unit = {},
+    onHit: () -> Unit = {},
+    onStand: () -> Unit = {},
+    onDouble: () -> Unit = {},
+    onSplit: () -> Unit = {},
+    onSurrender: () -> Unit = {},
+    onInsurance: () -> Unit = {},
+    onDeclineInsurance: () -> Unit = {},
+    onEvenMoney: () -> Unit = {},
+    onDeclineEvenMoney: () -> Unit = {},
+    onNewRound: () -> Unit = {},
+    onReset: () -> Unit = {},
+    onToggleCoach: () -> Unit = {},
+    onToggleDeviations: () -> Unit = {},
+    onToggleCount: () -> Unit = {},
+    onShowChart: () -> Unit = {},
+    onEnd: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -63,22 +119,30 @@ fun GameScreen(
             handsPlayed = state.handsPlayed,
             handsWon = state.handsWon,
             coachEnabled = state.coachEnabled,
-            onToggleCoach = viewModel::toggleCoach,
+            onToggleCoach = onToggleCoach,
             deviationsEnabled = state.deviationsEnabled,
-            onToggleDeviations = viewModel::toggleDeviations,
+            onToggleDeviations = onToggleDeviations,
             showCount = state.showCount,
             runningCount = state.runningCount,
             trueCount = state.trueCount,
-            onToggleCount = viewModel::toggleCount,
-            onShowChart = { showChart = true },
-            onEnd = onNavigateToSettings
+            onToggleCount = onToggleCount,
+            onShowChart = onShowChart,
+            onEnd = onEnd
         )
+
+        val hasExtraPlayers = state.extraPlayers.isNotEmpty()
 
         DealerArea(
             hand = state.dealerHand,
             showHoleCard = state.showDealerHoleCard,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(if (hasExtraPlayers) 0.8f else 1f)
         )
+
+        if (hasExtraPlayers) {
+            ExtraPlayersArea(
+                extraPlayers = state.extraPlayers
+            )
+        }
 
         PlayerArea(
             hands = state.playerHands,
@@ -86,8 +150,90 @@ fun GameScreen(
             handResults = state.handResults,
             phase = state.phase,
             currentBet = state.currentBet,
-            modifier = Modifier.weight(1.2f)
+            modifier = Modifier.weight(if (hasExtraPlayers) 1.4f else 1.2f)
         )
+
+        // Bottom action area — fixed height so card areas above don't shift
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            when (state.phase) {
+                GamePhase.BETTING -> {
+                    BetSelector(
+                        currentBet = state.currentBet,
+                        chips = state.chips,
+                        rules = state.rules,
+                        onBetChanged = onBetChanged,
+                        onDeal = onDeal
+                    )
+                }
+
+                GamePhase.INSURANCE_OFFERED -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Insurance?",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        InsuranceBar(
+                            availableActions = state.availableActions,
+                            onInsurance = onInsurance,
+                            onDecline = onDeclineInsurance,
+                            onEvenMoney = onEvenMoney,
+                            onDeclineEvenMoney = onDeclineEvenMoney
+                        )
+                    }
+                }
+
+                GamePhase.PLAYER_TURN -> {
+                    ActionBar(
+                        availableActions = state.availableActions,
+                        onHit = onHit,
+                        onStand = onStand,
+                        onDouble = onDouble,
+                        onSplit = onSplit,
+                        onSurrender = onSurrender
+                    )
+                }
+
+                GamePhase.DEALING, GamePhase.DEALER_PEEK, GamePhase.EXTRA_PLAYERS_TURN, GamePhase.DEALER_TURN -> {
+                    Text(
+                        text = when (state.phase) {
+                            GamePhase.DEALER_TURN -> "Dealer's turn..."
+                            GamePhase.EXTRA_PLAYERS_TURN -> "Other players..."
+                            else -> "Dealing..."
+                        },
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 16.sp
+                    )
+                }
+
+                GamePhase.ROUND_COMPLETE -> {
+                    ResultArea(
+                        message = state.roundMessage,
+                        payout = state.roundPayout,
+                        onNewRound = onNewRound
+                    )
+                }
+
+                GamePhase.GAME_OVER -> {
+                    GameOverArea(
+                        handsPlayed = state.handsPlayed,
+                        handsWon = state.handsWon,
+                        onReset = onReset
+                    )
+                }
+            }
+        }
 
         if (state.coachEnabled && state.coachFeedback.isNotEmpty()) {
             val isCorrect = state.coachFeedback.startsWith("Correct")
@@ -116,95 +262,6 @@ fun GameScreen(
                 }
             }
         }
-
-        // Bottom action area — fixed height so card areas above don't shift
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(160.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            when (state.phase) {
-                GamePhase.BETTING -> {
-                    BetSelector(
-                        currentBet = state.currentBet,
-                        chips = state.chips,
-                        rules = state.rules,
-                        onBetChanged = viewModel::adjustBet,
-                        onDeal = viewModel::deal
-                    )
-                }
-
-                GamePhase.INSURANCE_OFFERED -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Insurance?",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        InsuranceBar(
-                            availableActions = state.availableActions,
-                            onInsurance = viewModel::takeInsurance,
-                            onDecline = viewModel::declineInsurance,
-                            onEvenMoney = viewModel::takeEvenMoney,
-                            onDeclineEvenMoney = viewModel::declineEvenMoney
-                        )
-                    }
-                }
-
-                GamePhase.PLAYER_TURN -> {
-                    ActionBar(
-                        availableActions = state.availableActions,
-                        onHit = viewModel::hit,
-                        onStand = viewModel::stand,
-                        onDouble = viewModel::doubleDown,
-                        onSplit = viewModel::split,
-                        onSurrender = viewModel::surrender
-                    )
-                }
-
-                GamePhase.DEALING, GamePhase.DEALER_PEEK, GamePhase.DEALER_TURN -> {
-                    Text(
-                        text = when (state.phase) {
-                            GamePhase.DEALER_TURN -> "Dealer's turn..."
-                            else -> "Dealing..."
-                        },
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 16.sp
-                    )
-                }
-
-                GamePhase.ROUND_COMPLETE -> {
-                    ResultArea(
-                        message = state.roundMessage,
-                        payout = state.roundPayout,
-                        onNewRound = viewModel::newRound
-                    )
-                }
-
-                GamePhase.GAME_OVER -> {
-                    GameOverArea(
-                        handsPlayed = state.handsPlayed,
-                        handsWon = state.handsWon,
-                        onReset = viewModel::resetGame
-                    )
-                }
-            }
-        }
-    }
-
-    StrategyChartOverlay(
-        visible = showChart,
-        chartData = chartData,
-        hasSurrender = state.rules.surrenderPolicy != SurrenderPolicy.NONE,
-        onDismiss = { showChart = false }
-    )
     }
 }
 

@@ -66,6 +66,10 @@ class SettingsViewModel : ViewModel() {
         _rules.update { it.copy(trainPairedHands = value) }
     }
 
+    fun setExtraPlayers(count: Int) {
+        _rules.update { it.copy(extraPlayers = count.coerceIn(0, 2)) }
+    }
+
     fun applyPreset(preset: String) {
         _rules.value = when (preset) {
             "Vegas" -> CasinoRules(

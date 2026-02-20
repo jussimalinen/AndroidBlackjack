@@ -11,6 +11,7 @@ import com.jmalinen.blackjack.model.Card
 import com.jmalinen.blackjack.model.CasinoRules
 import com.jmalinen.blackjack.model.Rank
 import com.jmalinen.blackjack.model.GamePhase
+import com.jmalinen.blackjack.model.ExtraPlayerState
 import com.jmalinen.blackjack.model.GameState
 import com.jmalinen.blackjack.model.Hand
 import com.jmalinen.blackjack.model.HandResult
@@ -37,6 +38,7 @@ class GameViewModel : ViewModel() {
     companion object {
         private const val DEAL_CARD_DELAY = 300L
         private const val DEALER_DRAW_DELAY = 500L
+        private const val EXTRA_PLAYER_DELAY = 400L
         private const val HOLE_CARD_REVEAL_DELAY = 400L
     }
 
@@ -182,6 +184,10 @@ class GameViewModel : ViewModel() {
             playerCard2 = drawAndCount()
         }
 
+        // Pre-draw extra player cards
+        val extraCount = state.rules.extraPlayers
+        val extraCards = List(extraCount) { Pair(drawAndCount(), drawAndCount()) }
+
         val dealerCard1 = drawAndCount()
         val dealerCard2 = shoe.draw() // hole card — counted when revealed
         pendingHoleCardValue = dealerCard2.rank.hiLoValue
@@ -198,12 +204,23 @@ class GameViewModel : ViewModel() {
                 handResults = emptyMap(),
                 showDealerHoleCard = false,
                 roundPayout = 0,
-                roundMessage = ""
+                roundMessage = "",
+                extraPlayers = List(extraCount) { ExtraPlayerState() }
             )
         }
 
-        // Animate cards one at a time
+        // Animate cards one at a time in casino order
         dealJob = viewModelScope.launch {
+            // Round 1: extra players card 1, then player card 1, then dealer card 1
+            for (i in 0 until extraCount) {
+                delay(DEAL_CARD_DELAY)
+                _state.update {
+                    val eps = it.extraPlayers.toMutableList()
+                    eps[i] = eps[i].copy(hand = eps[i].hand.addCard(extraCards[i].first))
+                    it.copy(extraPlayers = eps)
+                }
+            }
+
             // Player card 1
             delay(DEAL_CARD_DELAY)
             _state.update {
@@ -216,6 +233,16 @@ class GameViewModel : ViewModel() {
             delay(DEAL_CARD_DELAY)
             _state.update {
                 it.copy(dealerHand = it.dealerHand.addCard(dealerCard1))
+            }
+
+            // Round 2: extra players card 2, then player card 2, then dealer card 2
+            for (i in 0 until extraCount) {
+                delay(DEAL_CARD_DELAY)
+                _state.update {
+                    val eps = it.extraPlayers.toMutableList()
+                    eps[i] = eps[i].copy(hand = eps[i].hand.addCard(extraCards[i].second))
+                    it.copy(extraPlayers = eps)
+                }
             }
 
             // Player card 2
@@ -266,7 +293,7 @@ class GameViewModel : ViewModel() {
             return
         }
 
-        startPlayerTurn()
+        playExtraPlayers()
     }
 
     fun takeInsurance() {
@@ -356,7 +383,52 @@ class GameViewModel : ViewModel() {
             return
         }
 
-        startPlayerTurn()
+        playExtraPlayers()
+    }
+
+    private fun playExtraPlayers() {
+        val state = _state.value
+        if (state.extraPlayers.isEmpty()) {
+            startPlayerTurn()
+            return
+        }
+
+        _state.update { it.copy(phase = GamePhase.EXTRA_PLAYERS_TURN, availableActions = emptySet()) }
+
+        dealJob = viewModelScope.launch {
+            val dealerUpCard = state.dealerHand.cards.firstOrNull() ?: return@launch
+
+            for (epIndex in state.extraPlayers.indices) {
+                var hand = _state.value.extraPlayers[epIndex].hand
+
+                while (!hand.isBusted && hand.score < 21) {
+                    val actions = setOf(PlayerAction.HIT, PlayerAction.STAND, PlayerAction.DOUBLE_DOWN)
+                    val action = BasicStrategyAdvisor.optimalAction(
+                        hand = hand,
+                        dealerUpCard = dealerUpCard,
+                        availableActions = actions,
+                        rules = _state.value.rules
+                    )
+
+                    if (action == PlayerAction.STAND) break
+
+                    delay(EXTRA_PLAYER_DELAY)
+                    val card = drawAndCount()
+                    hand = hand.addCard(card)
+
+                    _state.update {
+                        val eps = it.extraPlayers.toMutableList()
+                        eps[epIndex] = eps[epIndex].copy(hand = hand)
+                        it.copy(extraPlayers = eps)
+                    }
+
+                    // Double down means only one card
+                    if (action == PlayerAction.DOUBLE_DOWN) break
+                }
+            }
+
+            startPlayerTurn()
+        }
     }
 
     private fun startPlayerTurn() {
@@ -586,6 +658,21 @@ class GameViewModel : ViewModel() {
 
         val message = buildResultMessage(result, state)
 
+        // Compute extra player results
+        val updatedExtraPlayers = state.extraPlayers.map { ep ->
+            val epResult = when {
+                ep.hand.isBusted -> HandResult.BUST
+                ep.hand.isBlackjack && !state.dealerHand.isBlackjack -> HandResult.BLACKJACK
+                ep.hand.isBlackjack && state.dealerHand.isBlackjack -> HandResult.PUSH
+                !ep.hand.isBlackjack && state.dealerHand.isBlackjack -> HandResult.LOSE
+                state.dealerHand.isBusted -> HandResult.WIN
+                ep.hand.score > state.dealerHand.score -> HandResult.WIN
+                ep.hand.score == state.dealerHand.score -> HandResult.PUSH
+                else -> HandResult.LOSE
+            }
+            ep.copy(result = epResult)
+        }
+
         _state.update {
             it.copy(
                 phase = if (newChips <= 0) GamePhase.GAME_OVER else GamePhase.ROUND_COMPLETE,
@@ -596,7 +683,8 @@ class GameViewModel : ViewModel() {
                 roundMessage = message,
                 availableActions = emptySet(),
                 handsPlayed = it.handsPlayed + 1,
-                handsWon = it.handsWon + winsThisRound
+                handsWon = it.handsWon + winsThisRound,
+                extraPlayers = updatedExtraPlayers
             )
         }
     }
@@ -635,7 +723,8 @@ class GameViewModel : ViewModel() {
                 roundMessage = "",
                 availableActions = emptySet(),
                 currentBet = it.currentBet.coerceAtMost(it.chips),
-                coachFeedback = ""
+                coachFeedback = "",
+                extraPlayers = emptyList()
             )
         }
     }

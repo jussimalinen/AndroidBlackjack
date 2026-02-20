@@ -234,6 +234,27 @@ fun SettingsScreen(
             onCheckedChange = settingsViewModel::toggleTrainPairedHands
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Extra players
+        SectionHeader("Extra Players: ${rules.extraPlayers}")
+        Text(
+            text = "Computer-controlled players for card counting practice",
+            color = Color.White.copy(alpha = 0.5f),
+            fontSize = 12.sp,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        Slider(
+            value = rules.extraPlayers.toFloat(),
+            onValueChange = { settingsViewModel.setExtraPlayers(it.toInt()) },
+            valueRange = 0f..2f,
+            steps = 1,
+            colors = SliderDefaults.colors(
+                thumbColor = GoldAccent,
+                activeTrackColor = GoldAccent
+            )
+        )
+
         Spacer(modifier = Modifier.height(24.dp))
 
         // Start button

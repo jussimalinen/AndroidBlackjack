@@ -17,7 +17,8 @@ data class CasinoRules(
     val minimumBet: Int = 10,
     val maximumBet: Int = 500,
     val trainSoftHands: Boolean = false,
-    val trainPairedHands: Boolean = false
+    val trainPairedHands: Boolean = false,
+    val extraPlayers: Int = 0
 ) {
     val isTrainingMode: Boolean get() = trainSoftHands || trainPairedHands
 }

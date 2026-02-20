@@ -1,5 +1,10 @@
 package com.jmalinen.blackjack.model
 
+data class ExtraPlayerState(
+    val hand: Hand = Hand(),
+    val result: HandResult? = null
+)
+
 data class GameState(
     val phase: GamePhase = GamePhase.BETTING,
     val rules: CasinoRules = CasinoRules(),
@@ -24,7 +29,8 @@ data class GameState(
     val shoePenetration: Float = 0f,
     val runningCount: Int = 0,
     val trueCount: Float = 0f,
-    val showCount: Boolean = false
+    val showCount: Boolean = false,
+    val extraPlayers: List<ExtraPlayerState> = emptyList()
 ) {
     val activeHand: Hand? get() = playerHands.getOrNull(activeHandIndex)
     val totalBetOnTable: Int get() = playerHands.sumOf { it.bet } + insuranceBet
