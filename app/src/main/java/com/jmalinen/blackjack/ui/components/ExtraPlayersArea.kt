@@ -18,7 +18,8 @@ import com.jmalinen.blackjack.model.ExtraPlayerState
 @Composable
 fun ExtraPlayersArea(
     extraPlayers: List<ExtraPlayerState>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    cardScale: Float = 0.75f
 ) {
     if (extraPlayers.isEmpty()) return
 
@@ -47,7 +48,7 @@ fun ExtraPlayersArea(
                         isActive = false,
                         showScore = ep.hand.cards.isNotEmpty(),
                         result = ep.result,
-                        cardScale = 0.75f
+                        cardScale = cardScale
                     )
                 }
             }

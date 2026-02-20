@@ -23,7 +23,8 @@ fun DealerArea(
     hand: Hand,
     showHoleCard: Boolean,
     modifier: Modifier = Modifier,
-    compact: Boolean = false
+    compact: Boolean = false,
+    cardScale: Float = 1f
 ) {
     val flipProgress by animateFloatAsState(
         targetValue = if (showHoleCard) 1f else 0f,
@@ -42,7 +43,7 @@ fun DealerArea(
         Text(
             text = "DEALER",
             color = Color.White.copy(alpha = 0.6f),
-            fontSize = 15.sp,
+            fontSize = (15 * cardScale).sp,
             fontWeight = FontWeight.Bold
         )
 
@@ -56,7 +57,7 @@ fun DealerArea(
                     }
                 } else "",
                 color = Color.White.copy(alpha = scoreAlpha),
-                fontSize = 16.sp,
+                fontSize = (16 * cardScale).sp,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -76,6 +77,7 @@ fun DealerArea(
             isActive = false,
             showScore = false,
             result = null,
+            cardScale = cardScale,
             modifier = if (!showHoleCard) Modifier else Modifier.graphicsLayer {
                 // Subtle scale pop when hole card reveals
                 val scale = 1f + (0.03f * (1f - flipProgress))

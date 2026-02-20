@@ -86,7 +86,7 @@ fun HandView(
                                 .offset(x = (index * scaledCardOverlap).dp)
                                 .zIndex(index.toFloat())
                                 .then(
-                                    if (cardScale < 1f) Modifier.graphicsLayer {
+                                    if (cardScale != 1f) Modifier.graphicsLayer {
                                         scaleX = cardScale
                                         scaleY = cardScale
                                         transformOrigin = TransformOrigin(0f, 0f)

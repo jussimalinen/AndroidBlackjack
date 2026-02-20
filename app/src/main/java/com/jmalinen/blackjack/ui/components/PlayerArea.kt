@@ -32,7 +32,7 @@ fun PlayerArea(
     modifier: Modifier = Modifier,
     cardScale: Float = 1f
 ) {
-    val verticalPadding = if (cardScale < 1f) 4.dp else 16.dp
+    val verticalPadding = (16f * cardScale).coerceIn(4f, 24f).dp
     Column(
         modifier = modifier
             .fillMaxWidth()

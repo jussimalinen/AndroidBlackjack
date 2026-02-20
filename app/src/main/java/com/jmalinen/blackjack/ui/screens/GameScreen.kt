@@ -3,6 +3,7 @@ package com.jmalinen.blackjack.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -107,11 +109,18 @@ internal fun GameScreenContent(
     onShowChart: () -> Unit = {},
     onEnd: () -> Unit = {}
 ) {
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(FeltGreen)
     ) {
+        val hasExtraPlayers = state.extraPlayers.isNotEmpty()
+
+        val scales = remember(maxWidth, hasExtraPlayers) {
+            computeScales(maxWidth, hasExtraPlayers)
+        }
+
+        Column(modifier = Modifier.fillMaxSize()) {
         GameInfoBar(
             chips = state.chips,
             currentBet = state.currentBet,
@@ -130,18 +139,18 @@ internal fun GameScreenContent(
             onEnd = onEnd
         )
 
-        val hasExtraPlayers = state.extraPlayers.isNotEmpty()
-
         DealerArea(
             hand = state.dealerHand,
             showHoleCard = state.showDealerHoleCard,
-            modifier = Modifier.weight(if (hasExtraPlayers) 0.7f else 1f),
-            compact = hasExtraPlayers
+            modifier = Modifier.weight(1f),
+            compact = hasExtraPlayers,
+            cardScale = scales.dealerScale
         )
 
         if (hasExtraPlayers) {
             ExtraPlayersArea(
-                extraPlayers = state.extraPlayers
+                extraPlayers = state.extraPlayers,
+                cardScale = scales.extraPlayerScale
             )
         }
 
@@ -152,14 +161,14 @@ internal fun GameScreenContent(
             phase = state.phase,
             currentBet = state.currentBet,
             modifier = Modifier.weight(if (hasExtraPlayers) 1.5f else 1.2f),
-            cardScale = if (hasExtraPlayers) 0.85f else 1f
+            cardScale = scales.playerScale
         )
 
         // Bottom action area — fixed height so card areas above don't shift
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(160.dp),
+                .height(scales.actionBoxHeight),
             contentAlignment = Alignment.Center
         ) {
             when (state.phase) {
@@ -264,7 +273,34 @@ internal fun GameScreenContent(
                 }
             }
         }
+        } // Column
+    } // BoxWithConstraints
+}
+
+private data class UiScales(
+    val dealerScale: Float,
+    val playerScale: Float,
+    val extraPlayerScale: Float,
+    val actionBoxHeight: Dp
+)
+
+private fun computeScales(maxWidth: Dp, hasExtraPlayers: Boolean): UiScales {
+    val baseScale = when {
+        maxWidth < 380.dp -> 0.75f
+        maxWidth < 600.dp -> 1.0f
+        else -> 1.4f
     }
+    val actionHeight = when {
+        maxWidth < 380.dp -> 130.dp
+        maxWidth < 600.dp -> 160.dp
+        else -> 200.dp
+    }
+    return UiScales(
+        dealerScale = baseScale,
+        playerScale = if (hasExtraPlayers) baseScale * 0.85f else baseScale,
+        extraPlayerScale = baseScale * 0.75f,
+        actionBoxHeight = actionHeight
+    )
 }
 
 @Composable
