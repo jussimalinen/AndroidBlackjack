@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -43,6 +44,7 @@ fun GameInfoBar(
     runningCount: Int,
     trueCount: Float,
     onToggleCount: () -> Unit,
+    onEnd: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
@@ -131,6 +133,7 @@ fun GameInfoBar(
                         .clickable { onToggleCount() }
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 )
+
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -170,6 +173,12 @@ fun GameInfoBar(
                 trackColor = Color.White.copy(alpha = 0.1f),
                 drawStopIndicator = {}
             )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        OutlinedButton(onClick = onEnd) {
+            Text("End", color = Color.White)
         }
     }
 }

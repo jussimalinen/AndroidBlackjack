@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -61,7 +60,8 @@ fun GameScreen(
             showCount = state.showCount,
             runningCount = state.runningCount,
             trueCount = state.trueCount,
-            onToggleCount = viewModel::toggleCount
+            onToggleCount = viewModel::toggleCount,
+            onEnd = onNavigateToSettings
         )
 
         DealerArea(
@@ -174,8 +174,7 @@ fun GameScreen(
                     ResultArea(
                         message = state.roundMessage,
                         payout = state.roundPayout,
-                        onNewRound = viewModel::newRound,
-                        onSettings = onNavigateToSettings
+                        onNewRound = viewModel::newRound
                     )
                 }
 
@@ -183,8 +182,7 @@ fun GameScreen(
                     GameOverArea(
                         handsPlayed = state.handsPlayed,
                         handsWon = state.handsWon,
-                        onReset = viewModel::resetGame,
-                        onSettings = onNavigateToSettings
+                        onReset = viewModel::resetGame
                     )
                 }
             }
@@ -196,8 +194,7 @@ fun GameScreen(
 private fun ResultArea(
     message: String,
     payout: Int,
-    onNewRound: () -> Unit,
-    onSettings: () -> Unit
+    onNewRound: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -215,24 +212,15 @@ private fun ResultArea(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+        Button(
+            onClick = onNewRound,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = GoldAccent,
+                contentColor = Color.Black
+            ),
+            shape = RoundedCornerShape(24.dp)
         ) {
-            Button(
-                onClick = onNewRound,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = GoldAccent,
-                    contentColor = Color.Black
-                ),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Text("Next Hand", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-
-            OutlinedButton(onClick = onSettings) {
-                Text("Settings", color = Color.White)
-            }
+            Text("Next Hand", fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
     }
 }
@@ -241,8 +229,7 @@ private fun ResultArea(
 private fun GameOverArea(
     handsPlayed: Int,
     handsWon: Int,
-    onReset: () -> Unit,
-    onSettings: () -> Unit
+    onReset: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -269,23 +256,14 @@ private fun GameOverArea(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+        Button(
+            onClick = onReset,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = GoldAccent,
+                contentColor = Color.Black
+            )
         ) {
-            Button(
-                onClick = onReset,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = GoldAccent,
-                    contentColor = Color.Black
-                )
-            ) {
-                Text("Play Again", fontWeight = FontWeight.Bold)
-            }
-
-            OutlinedButton(onClick = onSettings) {
-                Text("Settings", color = Color.White)
-            }
+            Text("Play Again", fontWeight = FontWeight.Bold)
         }
     }
 }
