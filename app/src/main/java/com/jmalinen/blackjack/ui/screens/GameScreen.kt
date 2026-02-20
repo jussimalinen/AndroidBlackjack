@@ -16,6 +16,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,13 +27,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jmalinen.blackjack.engine.BasicStrategyAdvisor
 import com.jmalinen.blackjack.model.GamePhase
+import com.jmalinen.blackjack.model.SurrenderPolicy
 import com.jmalinen.blackjack.ui.components.ActionBar
 import com.jmalinen.blackjack.ui.components.BetSelector
 import com.jmalinen.blackjack.ui.components.DealerArea
 import com.jmalinen.blackjack.ui.components.GameInfoBar
 import com.jmalinen.blackjack.ui.components.InsuranceBar
 import com.jmalinen.blackjack.ui.components.PlayerArea
+import com.jmalinen.blackjack.ui.components.StrategyChartOverlay
 import com.jmalinen.blackjack.ui.theme.FeltGreen
 import com.jmalinen.blackjack.ui.theme.GoldAccent
 import com.jmalinen.blackjack.viewmodel.GameViewModel
@@ -41,7 +47,10 @@ fun GameScreen(
     onNavigateToSettings: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var showChart by remember { mutableStateOf(false) }
+    val chartData = remember(state.rules) { BasicStrategyAdvisor.getChartData(state.rules) }
 
+    Box(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,6 +70,7 @@ fun GameScreen(
             runningCount = state.runningCount,
             trueCount = state.trueCount,
             onToggleCount = viewModel::toggleCount,
+            onShowChart = { showChart = true },
             onEnd = onNavigateToSettings
         )
 
@@ -187,6 +197,14 @@ fun GameScreen(
                 }
             }
         }
+    }
+
+    StrategyChartOverlay(
+        visible = showChart,
+        chartData = chartData,
+        hasSurrender = state.rules.surrenderPolicy != SurrenderPolicy.NONE,
+        onDismiss = { showChart = false }
+    )
     }
 }
 

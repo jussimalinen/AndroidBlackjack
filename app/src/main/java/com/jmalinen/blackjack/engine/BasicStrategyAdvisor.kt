@@ -2,9 +2,12 @@ package com.jmalinen.blackjack.engine
 
 import com.jmalinen.blackjack.model.Card
 import com.jmalinen.blackjack.model.CasinoRules
+import com.jmalinen.blackjack.model.ChartCell
+import com.jmalinen.blackjack.model.ChartRow
 import com.jmalinen.blackjack.model.Hand
 import com.jmalinen.blackjack.model.PlayerAction
 import com.jmalinen.blackjack.model.Rank
+import com.jmalinen.blackjack.model.StrategyChartData
 
 /**
  * Standard basic strategy advisor for 4-8 deck blackjack.
@@ -230,5 +233,55 @@ object BasicStrategyAdvisor {
         das && d <= 5 -> Cell.P   // DAS: split vs 2-7
         !das && d in 2..5 -> Cell.P  // No DAS: split vs 4-7
         else -> Cell.H
+    }
+
+    // -- Chart data generation --
+
+    fun getChartData(rules: CasinoRules): StrategyChartData {
+        val hardRows = (5..20).map { score ->
+            ChartRow(
+                label = "$score",
+                cells = (0..9).map { d -> cellToChartCell(hardStrategy(score, d, 2, rules)) }
+            )
+        }
+
+        val softLabels = listOf("A,2", "A,3", "A,4", "A,5", "A,6", "A,7", "A,8", "A,9")
+        val softRows = (13..20).mapIndexed { i, score ->
+            ChartRow(
+                label = softLabels[i],
+                cells = (0..9).map { d -> cellToChartCell(softStrategy(score, d, rules)) }
+            )
+        }
+
+        val pairRanks = listOf(
+            Rank.TWO, Rank.THREE, Rank.FOUR, Rank.FIVE, Rank.SIX,
+            Rank.SEVEN, Rank.EIGHT, Rank.NINE, Rank.TEN, Rank.ACE
+        )
+        val pairLabels = listOf("2,2", "3,3", "4,4", "5,5", "6,6", "7,7", "8,8", "9,9", "10,10", "A,A")
+        val pairRows = pairRanks.mapIndexed { i, rank ->
+            ChartRow(
+                label = pairLabels[i],
+                cells = (0..9).map { d ->
+                    val cell = pairStrategy(rank, d, rules)
+                    if (cell != null) cellToChartCell(cell)
+                    else cellToChartCell(hardStrategy(rank.baseValue * 2, d, 2, rules))
+                }
+            )
+        }
+
+        return StrategyChartData(hardRows, softRows, pairRows)
+    }
+
+    private fun cellToChartCell(cell: Cell): ChartCell = when (cell) {
+        Cell.H  -> ChartCell.HIT
+        Cell.S  -> ChartCell.STAND
+        Cell.D  -> ChartCell.DOUBLE_HIT
+        Cell.Ds -> ChartCell.DOUBLE_STAND
+        Cell.P  -> ChartCell.SPLIT
+        Cell.Ph -> ChartCell.SPLIT_HIT
+        Cell.Pd -> ChartCell.SPLIT_HIT
+        Cell.Rh -> ChartCell.SURRENDER_HIT
+        Cell.Rs -> ChartCell.SURRENDER_STAND
+        Cell.Rp -> ChartCell.SURRENDER_SPLIT
     }
 }

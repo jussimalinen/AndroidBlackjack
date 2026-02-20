@@ -44,6 +44,7 @@ fun GameInfoBar(
     runningCount: Int,
     trueCount: Float,
     onToggleCount: () -> Unit,
+    onShowChart: () -> Unit,
     onEnd: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -177,8 +178,13 @@ fun GameInfoBar(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        OutlinedButton(onClick = onEnd) {
-            Text("End", color = Color.White)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = onEnd) {
+                Text("End", color = Color.White)
+            }
+            OutlinedButton(onClick = onShowChart) {
+                Text("Chart", color = Color.White)
+            }
         }
     }
 }
