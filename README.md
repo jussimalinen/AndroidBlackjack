@@ -1,6 +1,6 @@
 # Blackjack
 
-An Android blackjack game built with Jetpack Compose. Play against the dealer with fully configurable casino rules, chip tracking, and a built-in coach that evaluates your plays against basic strategy.
+A blackjack game for Android and iOS. Play against the dealer with fully configurable casino rules, chip tracking, and a built-in coach that evaluates your plays against basic strategy.
 
 ## Features
 
@@ -8,6 +8,7 @@ An Android blackjack game built with Jetpack Compose. Play against the dealer wi
 - **Rule presets** — Vegas, European, Favorable, and Helsinki Casino (with three 7s bonus)
 - **Full blackjack actions** — hit, stand, double down, split, surrender, insurance
 - **Coach mode** — real-time feedback on whether each decision matches optimal basic strategy
+- **Hi-Lo card counting** — running count, true count, and shoe penetration display
 - **Animated dealing** — cards dealt one at a time with entrance animations
 - **Session chip tracking** — tracks chips, wins, and hands played
 
@@ -21,13 +22,15 @@ An Android blackjack game built with Jetpack Compose. Play against the dealer wi
 
 ## Getting Started
 
-### Prerequisites
+### Android
+
+#### Prerequisites
 
 - [Android Studio](https://developer.android.com/studio) (Ladybug or newer recommended)
 - JDK 17
 - Android SDK with API 35 installed
 
-### Setup
+#### Setup
 
 1. Clone the repository:
    ```bash
@@ -42,16 +45,38 @@ An Android blackjack game built with Jetpack Compose. Play against the dealer wi
    - Select a device or emulator (API 28+)
    - Click **Run** or press `Shift+F10`
 
-### Command Line Build
+#### Command Line Build
 
 ```bash
 ./gradlew assembleDebug
 ```
 
+### iOS
+
+#### Prerequisites
+
+- [Xcode](https://developer.apple.com/xcode/) 16 or newer
+- iOS 17+ deployment target
+
+#### Setup
+
+1. Open `ios/Blackjack/Blackjack.xcodeproj` in Xcode
+2. Select a simulator or device
+3. Click **Run** or press `Cmd+R`
+
 ## Tech Stack
+
+### Android
 
 - Kotlin 2.1.0
 - Jetpack Compose (BOM 2024.12.01)
 - Material 3
 - Navigation Compose
 - ViewModel + StateFlow (MVVM)
+
+### iOS
+
+- Swift / SwiftUI
+- @Observable macro (iOS 17+)
+- NavigationStack
+- MVVM with @MainActor ViewModels

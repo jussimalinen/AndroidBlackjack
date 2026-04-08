@@ -2,9 +2,11 @@
 
 ## Project Overview
 
-Android Blackjack game built with Jetpack Compose. Players configure casino rules on a settings screen, then play blackjack with hit/stand/double/split/surrender. Includes a coach mode that evaluates plays against basic strategy, and a Hi-Lo card counting display.
+Blackjack game for Android (Jetpack Compose) and iOS (SwiftUI). Players configure casino rules on a settings screen, then play blackjack with hit/stand/double/split/surrender. Includes a coach mode that evaluates plays against basic strategy, and a Hi-Lo card counting display.
 
 ## Build & Test
+
+### Android
 
 ```bash
 ./gradlew assembleDebug                    # compile
@@ -15,11 +17,20 @@ Android Blackjack game built with Jetpack Compose. Players configure casino rule
 
 Min SDK 28, Target SDK 35, Kotlin 2.1.0, Compose BOM 2024.12.01, JVM target 17.
 
+### iOS
+
+Open `ios/Blackjack/Blackjack.xcodeproj` in Xcode 16+. iOS 17+ deployment target.
+
+```bash
+xcodebuild -project ios/Blackjack/Blackjack.xcodeproj -scheme Blackjack -sdk iphonesimulator build   # compile
+xcodebuild -project ios/Blackjack/Blackjack.xcodeproj -scheme Blackjack test -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16'  # run tests
+```
+
 ## Architecture
 
-MVVM with Kotlin StateFlow. No dependency injection. No persistence — all state is session-only.
+Both platforms use MVVM with the same logical structure. No dependency injection. No persistence — all state is session-only.
 
-### Source Layout
+### Android Source Layout
 
 All source under `app/src/main/java/com/jmalinen/blackjack/`:
 
@@ -53,28 +64,57 @@ ui/navigation/  NavGraph.kt — settings (start) -> game
 ui/theme/       Color.kt, Theme.kt (dark Material 3), Type.kt
 ```
 
+### iOS Source Layout
+
+All source under `ios/Blackjack/Blackjack/`:
+
+```
+Model/          Immutable structs and enums (mirrors Android model/)
+  Card.swift, Rank.swift, Suit.swift, Hand.swift, GameState.swift,
+  GamePhase.swift, CasinoRules.swift, HandResult.swift, PlayerAction.swift,
+  Shoe.swift, ChartCell.swift
+
+Engine/         Pure stateless game logic (mirrors Android engine/)
+  HandEvaluator.swift, BlackjackEngine.swift, DealerStrategy.swift,
+  PayoutCalculator.swift, BasicStrategyAdvisor.swift, DeviationAdvisor.swift
+
+ViewModel/      State orchestration
+  GameViewModel.swift     @Observable @MainActor — game state machine with async dealing
+  SettingsViewModel.swift @Observable @MainActor — rule presets and toggles
+
+Views/Screens/     GameScreen.swift, SettingsScreen.swift
+Views/Components/  CardView, HandView, ActionBar, BetSelector, DealerArea, PlayerArea,
+                   GameInfoBar, StrategyChart, ExtraPlayersArea
+Views/Theme/       Theme.swift — Color extensions (FeltGreen, GoldAccent, etc.)
+
+BlackjackApp.swift  Entry point (WindowGroup)
+ContentView.swift   Root navigation (NavigationStack)
+```
+
 ### Key Design Decisions
 
-- **GameState** (`model/GameState.kt`) is the single source of truth. It is an immutable data class exposed as `StateFlow<GameState>` from GameViewModel. All UI reads from this one flow.
-- **Engine objects** are stateless Kotlin `object` singletons with pure functions. They never hold state. The only mutable state outside GameState is `Shoe` (the card deck), held privately in GameViewModel.
-- **GamePhase** enum drives the state machine: `BETTING -> DEALING -> INSURANCE_OFFERED -> PLAYER_TURN -> DEALER_TURN -> ROUND_COMPLETE -> GAME_OVER`. The bottom action area in GameScreen switches UI based on phase.
-- **Card dealing** is animated via coroutines in GameViewModel (`viewModelScope.launch` with `delay()`). Cards are drawn upfront but added to state one at a time. The dealing coroutine is stored as `dealJob: Job?` and cancelled on new round/reset.
-- **Split hands** use a flat `List<Hand>` with `activeHandIndex` tracking which hand the player is acting on. Hands advance sequentially.
+- **GameState** is the single source of truth on both platforms. On Android it's an immutable data class exposed as `StateFlow<GameState>`. On iOS it's a struct mutated within `@Observable` ViewModels.
+- **Engine objects** are stateless. On Android they're Kotlin `object` singletons. On iOS they're structs/enums with static methods. They never hold state. The only mutable state outside GameState is `Shoe` (the card deck), held privately in GameViewModel.
+- **GamePhase** enum drives the state machine: `BETTING -> DEALING -> INSURANCE_OFFERED -> PLAYER_TURN -> DEALER_TURN -> ROUND_COMPLETE -> GAME_OVER`. The bottom action area switches UI based on phase.
+- **Card dealing** is animated via coroutines (Android) / `Task` with `try await Task.sleep` (iOS). Cards are drawn upfront but added to state one at a time.
+- **Split hands** use a flat list with `activeHandIndex` tracking which hand the player is acting on. Hands advance sequentially.
 - **CasinoRules** is fully configurable (deck count, S17/H17, dealer peek, surrender policy, DAS, payout ratios, Helsinki three-7s bonus, training mode, etc.). Rule presets live in SettingsViewModel.
 - **Coach mode** uses `BasicStrategyAdvisor` which has hardcoded basic strategy tables with rule-specific deviations. It evaluates after each player action and sets `coachFeedback` on GameState.
 - **Card counting** uses Hi-Lo system. Running count updated on each card draw; hole card counted when revealed. True count = running count / decks remaining.
 
 ### Navigation
 
-Two screens with shared ViewModels scoped to the NavHost in `NavGraph.kt`:
-- `"settings"` — start destination, rule configuration
-- `"game"` — the blackjack table
+Two screens with shared ViewModels:
+- `"settings"` / Settings — start destination, rule configuration
+- `"game"` / Game — the blackjack table
+
+On Android, ViewModels are scoped to the NavHost in `NavGraph.kt`. On iOS, ViewModels are created in `ContentView.swift` and passed via `@Environment`.
 
 ### UI Layout Constraints
 
-- The bottom action area in GameScreen is a fixed 160dp `Box` to prevent card areas from shifting when buttons appear/disappear.
-- Cards are 70x100dp with 28dp overlap offset.
-- `GameInfoBar` uses `WindowInsets.statusBars` for safe area padding.
+- The bottom action area in GameScreen is a fixed 160dp/pt `Box`/frame to prevent card areas from shifting when buttons appear/disappear.
+- Cards are 70x100dp (Android) / similar sizing on iOS with 28dp overlap offset.
+- `GameInfoBar` uses safe area padding on both platforms.
 
 ## Engine Details
 
@@ -98,6 +138,8 @@ Priority order in `when` block: surrendered → busted → three-7s bonus → pl
 
 ## Tests
 
+### Android Tests
+
 Tests under `app/src/test/java/com/jmalinen/blackjack/`:
 
 ```
@@ -110,8 +152,22 @@ viewmodel/
   GameViewModelTest.kt          State transitions, player actions, coach feedback, phase guards
 ```
 
+### iOS Tests
+
+Tests under `ios/Blackjack/BlackjackTests/`:
+
+```
+BasicStrategyAdvisorTests.swift       Strategy table correctness
+BasicStrategyAdvisorChartTests.swift  Chart data generation
+BlackjackEngineTests.swift            Action validation
+PayoutCalculatorTests.swift           Payout calculations
+DeviationAdvisorTests.swift           Counting deviations
+GameViewModelTests.swift              State machine and async flow testing
+```
+
 ### Test conventions
 
+#### Android
 - JUnit 4 with `org.junit.Assert`
 - `kotlinx-coroutines-test` for ViewModel tests (`UnconfinedTestDispatcher`, `runTest`, `advanceUntilIdle`)
 - Helper functions: `card(rank)`, `hand(vararg ranks)` for test data
@@ -119,17 +175,27 @@ viewmodel/
 - ViewModel tests use reflection to set `_state` for deterministic scenarios (the `Shoe` is not injectable)
 - After calling ViewModel actions that trigger dealer play, use `advanceUntilIdle()` to complete the coroutine. But don't advance if you need to assert intermediate state (e.g., chip count before round resolution)
 
+#### iOS
+- Swift Testing framework (`@Test`, `#expect`)
+- Engine tests use pure function calls — no mocking needed
+- ViewModel tests set `animationSpeedMultiplier = 0` for instant dealing
+- Async tests use `try await Task.sleep` for timing
+
 ### Running tests
 
 ```bash
+# Android
 ./gradlew :app:testDebugUnitTest                    # all tests
 ./gradlew :app:testDebugUnitTest --tests "*.PayoutCalculatorTest"  # single class
+
+# iOS
+xcodebuild -project ios/Blackjack/Blackjack.xcodeproj -scheme Blackjack test -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
 ## Conventions
 
-- State updates use `_state.update { it.copy(...) }` pattern
-- UI components are stateless `@Composable` functions that receive data and callbacks
-- Colors are defined in `ui/theme/Color.kt` (FeltGreen, GoldAccent, chip colors, etc.)
-- No string resources — all strings are hardcoded in Kotlin
-- No external libraries beyond AndroidX/Compose — no DI, no Room, no network
+- State updates use `_state.update { it.copy(...) }` (Android) / direct struct mutation (iOS)
+- UI components are stateless composables/views that receive data and callbacks
+- Colors are defined in theme files (FeltGreen, GoldAccent, chip colors, etc.)
+- No string resources — all strings are hardcoded
+- No external libraries beyond platform SDK — no DI, no persistence, no network
